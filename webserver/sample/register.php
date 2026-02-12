@@ -12,7 +12,7 @@ if (!isset($_POST["type"])) {
 
 $requestType = $_POST["type"];
 
-if ($requestType == "login") {
+if ($requestType == "register") {
 
     if (!isset($_POST["username"]) || !isset($_POST["password"])) {
         echo json_encode("Missing credentials");
@@ -22,12 +22,14 @@ if ($requestType == "login") {
     $username = $_POST["username"];
     $password = $_POST["password"];
 
-    // rabbitmq will go here later
+    // RabbitMQ register logic will go here later
 
-    echo json_encode("Login request received for " . $username);
+    echo json_encode("Register request received for " . $username);
     exit;
 }
 
 echo json_encode("Unsupported request type");
 exit;
+
+?>
 

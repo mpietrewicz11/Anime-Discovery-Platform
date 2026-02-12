@@ -1,0 +1,54 @@
+<html>
+<head>
+<title>Login</title>
+
+<script>
+
+function HandleLoginResponse(response)
+{
+    var text = JSON.parse(response);
+    document.getElementById("textResponse").innerHTML = "Response: " + text;
+}
+
+function SendLoginRequest()
+{
+    var username = document.getElementById("username").value;
+    var password = document.getElementById("password").value;
+
+    var request = new XMLHttpRequest();
+    request.open("POST", "login.php", true);
+    request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    request.onreadystatechange = function ()
+    {
+        if (this.readyState == 4 && this.status == 200)
+        {
+            HandleLoginResponse(this.responseText);
+        }
+    }
+
+    request.send("type=login&username=" + username + "&password=" + password);
+}
+
+</script>
+</head>
+
+<body>
+
+<h1>Login Page</h1>
+
+Username:<br>
+<input type="text" id="username"><br><br>
+
+Password:<br>
+<input type="password" id="password"><br><br>
+
+<button onclick="SendLoginRequest()">Login</button>
+
+<div id="textResponse">
+Awaiting response
+</div>
+
+</body>
+</html>
+
