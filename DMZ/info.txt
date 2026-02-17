@@ -1,0 +1,1 @@
+This will be used as a placeholder file within this DMZ folder.
