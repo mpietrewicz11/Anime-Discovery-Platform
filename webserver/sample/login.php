@@ -1,5 +1,10 @@
-
 <?php
+
+require __DIR__ . '/vendor/autoload.php';
+$config = require __DIR__ . '/config/rabbitmq.php';
+
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     echo json_encode("Invalid request");
@@ -24,11 +29,53 @@ if ($requestType == "login") {
     $password = $_POST["password"];
 
     // rabbitmq will go here later
+       $request_id = bin2hex(random_bytes(16));
+	
+	$payload = [
+	     "request_id" => $request_id,
+	      "type" => "login",
+	     "username" => $username,
+	     "password" => $password,
+	     "timestamp" => time()
 
-    echo json_encode("Login request received for " . $username);
+];
+
+	$body = json_encode($payload);
+        
+ 	$conn = new AMQPStreamConnection(
+		$config["host"],
+		$config["port"],
+		$config["user"],
+		$config["pass"],
+		$config["vhost"]
+);
+
+	$ch = $conn->channel();
+
+	$ch-> exchange_declare(
+		$config["exchange"],
+		$config["exchange_type"],
+		false,
+		true,
+		false
+);
+
+	$msg = new AMQPMessage($body, ["delivery_mode" => 2]);
+	
+	$ch->basic_publish($msg, $config["exchange"], "auth.login.request");
+
+	$ch->close();
+	$conn->close();
+
+	echo json_encode([
+		"status" => "queued",
+		"request_id" => $request_id
+]);
+   //  echo json_encode("Login request received for " . $username);
     exit;
 }
 
 echo json_encode("Unsupported request type");
 exit;
+
 
