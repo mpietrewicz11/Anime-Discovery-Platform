@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+
+<h1>Register</h1>
+
+<script>
+    // Display messages based on URL parameters
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("error") === "fields_required") {
+        document.write("<p style='color:red;'>All fields are required.</p>");
+    }
+
+    if (params.get("error") === "register_failed") {
+        document.write("<p style='color:red;'>Registration failed. Username may already exist.</p>");
+    }
+</script>
+
+<form action="register.php" method="POST">
+
+    <label>Username:</label><br>
+    <input type="text" name="username" required><br><br>
+
+    <label>Password:</label><br>
+    <input type="password" name="password" required><br><br>
+
+    <button type="submit">Register</button>
+
+</form>
+
+<br>
+<a href="login.html">Already have an account? Login</a>
+
+</body>
+</html>
+

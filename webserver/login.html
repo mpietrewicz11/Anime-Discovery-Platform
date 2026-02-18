@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+
+<body>
+
+<h1>Login Page</h1>
+
+<div id="message"></div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const messageDiv = document.getElementById("message");
+
+    if (params.get("registered") === "1") {
+        messageDiv.innerHTML = "<p style='color:green;'>Registration successful. Please log in.</p>";
+    }
+
+    if (params.get("error") === "login_failed") {
+        messageDiv.innerHTML = "<p style='color:red;'>Login failed. Try again.</p>";
+    }
+
+    if (params.get("error") === "fields_required") {
+        messageDiv.innerHTML = "<p style='color:red;'>All fields are required.</p>";
+    }
+</script>
+
+<form method="POST" action="login.php">
+    <input type="hidden" name="type" value="login">
+
+    Username:<br>
+    <input type="text" name="username" required><br><br>
+
+    Password:<br>
+    <input type="password" name="password" required><br><br>
+
+    <button type="submit">Login</button>
+</form>
+
+</body>
+</html>
+
