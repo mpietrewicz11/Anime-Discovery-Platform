@@ -38,7 +38,7 @@ function doLogin($username, $password)
 function requestProcessor($request)
 {
 
-require_once __DIR__ . "handler.php";
+require_once __DIR__ . '/handler.php';
 return handleRequest($request);
  /*   echo "received request" . PHP_EOL;
     var_dump($request);
