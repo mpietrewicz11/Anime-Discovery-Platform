@@ -4,7 +4,7 @@ require_once('backend/path.inc');
 require_once('backend/get_host_info.inc');
 require_once('backend/rabbitMQLib.inc');
 
-$client = new rabbitMQClient("testRabbitMQ.ini","testServer");
+$client = new rabbitMQClient("backend/testRabbitMQ.ini","testServer");
 
 
 $request = array();
