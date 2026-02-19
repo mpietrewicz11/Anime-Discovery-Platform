@@ -6,7 +6,7 @@ private $logindb;
 
 public function __construct()
 {
-	$this->logindb = new mysqli("127.0.0.1","root","12345","login");
+	$this->logindb = new mysqli("100.102.151.59","it490","123","it490");
 
 	if ($this->logindb->connect_errno != 0)
 	{
