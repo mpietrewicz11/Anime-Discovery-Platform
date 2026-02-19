@@ -38,9 +38,7 @@ function doLogin($username, $password)
 function requestProcessor($request)
 {
 
-require_once __DIR__ . "handler.php";
-return handleRequest($request);
- /*   echo "received request" . PHP_EOL;
+   echo "received request" . PHP_EOL;
     var_dump($request);
 
     if (!isset($request['type'])) {
@@ -68,7 +66,7 @@ return handleRequest($request);
             return doValidate($request['sessionId']);
     }
 
-    return ['ok' => false, 'error' => 'Unsupported type']; */
+    return ['ok' => false, 'error' => 'Unsupported type']; 
 }
 
 $server = new rabbitMQServer("testRabbitMQ.ini", "testServer");

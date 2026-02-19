@@ -30,18 +30,9 @@ error_log("Register response: " . json_encode($response));
 
 $success = false;
 
-if ($response === true) {
+if (is_array($response) && isset($response['ok']) && $response['ok'] === true) {
     $success = true;
-} 
-elseif (is_array($response)) {
-    if (isset($response['returnCode']) && (int)$response['returnCode'] === 0) {
-        $success = true;
-    }
-    if (isset($response['success']) && $response['success'] == true) {
-        $success = true;
-    }
 }
-
 if ($success) {
     header("Location: login.html?registered=1");
     exit;
