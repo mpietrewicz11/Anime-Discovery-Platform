@@ -3,7 +3,7 @@
 function db() {
 	$cfg = require __DIR__ . "/db_config.php";
 	$dsn = "mysql:host={$cfg['host']};dbname={$cfg['db']};charset=utf8mb4";
-    $pdo = return new PDO($dsn, $cfg['user'], $cfg['pass']);
+    $pdo = new PDO($dsn, $cfg['user'], $cfg['pass']);
      $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	return $pdo;
 }
