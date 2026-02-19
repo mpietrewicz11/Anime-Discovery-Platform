@@ -19,14 +19,14 @@ public function __construct()
 public function validateLogin($username,$password)
 {
 	$un = $this->logindb->real_escape_string($username);
-	$pw = $this->logindb->real_escape_string($password);
+
 	$statement = "select * from users where screenname = '$un'";
 	$response = $this->logindb->query($statement);
 
 	while ($row = $response->fetch_assoc())
 	{
 		echo "checking password for $username".PHP_EOL;
-		if ($row["password"] == $pw)
+		if (password_verify($password, $row["password"]))
 		{
 			echo "passwords match for $username".PHP_EOL;
 			return 1;// password match
@@ -35,5 +35,39 @@ public function validateLogin($username,$password)
 	}
 	return 0;//no users matched username
 }
+
+	public function registerUser($username, $password)
+{
+    $un = $this->logindb->real_escape_string($username);
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $safeHash = $this->logindb->real_escape_string($hash);
+    $statement = "INSERT INTO users (screenname, password) VALUES ('$un', '$safeHash')";
+    return $this->logindb->query($statement);
+}
+
+public function createSession($username)
+{
+    $un = $this->logindb->real_escape_string($username);
+    $result = $this->logindb->query("SELECT id FROM users WHERE screenname = '$un'");
+    $row = $result->fetch_assoc();
+    if (!$row) return false;
+
+    $sessionKey = bin2hex(random_bytes(32));
+    $safeKey = $this->logindb->real_escape_string($sessionKey);
+    $userId = $row['id'];
+
+    $this->logindb->query(
+        "INSERT INTO sessions (user_id, session_key, created_at) VALUES ($userId, '$safeKey', NOW())"
+    );
+    return $sessionKey;
+}
+
+public function validateSession($sessionId)
+{
+    $safeId = $this->logindb->real_escape_string($sessionId);
+    $result = $this->logindb->query("SELECT id FROM sessions WHERE session_key = '$safeId'");
+    return (bool)$result->fetch_assoc();
+}
+
 }
 ?>
