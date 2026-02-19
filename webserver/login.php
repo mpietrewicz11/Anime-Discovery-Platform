@@ -50,6 +50,9 @@ if ($success) {
     exit;
 }
 
+
+var_dump($response);
+die();
 header("Location: login.html?error=login_failed");
 exit;
 ?>
