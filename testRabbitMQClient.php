@@ -1,10 +1,10 @@
 #!/usr/bin/php
 <?php
-require_once('path.inc');
-require_once('get_host_info.inc');
-require_once('rabbitMQLib.inc');
+require_once('backend/path.inc');
+require_once('backend/get_host_info.inc');
+require_once('backend/rabbitMQLib.inc');
 
-$client = new rabbitMQClient("testRabbitMQ.ini","testServer");
+$client = new rabbitMQClient("backend/testRabbitMQ.ini","testServer");
 
 
 $request = array();
