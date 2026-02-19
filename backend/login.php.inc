@@ -20,7 +20,7 @@ public function validateLogin($username,$password)
 {
 	$un = $this->logindb->real_escape_string($username);
 
-	$statement = "select * from users where screenname = '$un'";
+	$statement = "select * from users where username = '$un'";
 	$response = $this->logindb->query($statement);
 
 	while ($row = $response->fetch_assoc())
@@ -41,14 +41,14 @@ public function validateLogin($username,$password)
     $un = $this->logindb->real_escape_string($username);
     $hash = password_hash($password, PASSWORD_DEFAULT);
     $safeHash = $this->logindb->real_escape_string($hash);
-    $statement = "INSERT INTO users (screenname, password) VALUES ('$un', '$safeHash')";
+    $statement = "INSERT INTO users (username, password) VALUES ('$un', '$safeHash')";
     return $this->logindb->query($statement);
 }
 
 public function createSession($username)
 {
     $un = $this->logindb->real_escape_string($username);
-    $result = $this->logindb->query("SELECT id FROM users WHERE screenname = '$un'");
+    $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
     $row = $result->fetch_assoc();
     if (!$row) return false;
 
