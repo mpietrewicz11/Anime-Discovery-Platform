@@ -36,9 +36,12 @@ public function validateLogin($username,$password)
 	return 0;//no users matched username
 }
 
-	public function registerUser($username, $password)
+public function registerUser($username, $password)
 {
     $un = $this->logindb->real_escape_string($username);
+    $check = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+    if ($check->fetch_assoc()) return false; // already exists
+
     $hash = password_hash($password, PASSWORD_DEFAULT);
     $safeHash = $this->logindb->real_escape_string($hash);
     $statement = "INSERT INTO users (username, password) VALUES ('$un', '$safeHash')";
