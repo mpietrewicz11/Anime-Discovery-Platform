@@ -37,9 +37,25 @@ function doLogin($username, $password)
 
 function requestProcessor($request)
 {
+    if (!isset($request['type'])) {
+        return ['ok' => false, 'error' => 'Invalid request'];
+    }
 
-require_once __DIR__ . '/handler.php';
-return handleRequest($request);
+    switch ($request['type']) {
+
+        case "register":
+            return doRegister($request['username'], $request['password']);
+
+        case "login":
+            return doLogin($request['username'], $request['password']);
+
+        case "validate_session":
+            return doValidate($request['sessionId']);
+
+        default:
+            return ['ok' => false, 'error' => 'Unknown request type'];
+    }
+}
  /*   echo "received request" . PHP_EOL;
     var_dump($request);
 
@@ -69,7 +85,7 @@ return handleRequest($request);
     }
 
     return ['ok' => false, 'error' => 'Unsupported type']; */
-}
+
 
 $server = new rabbitMQServer("testRabbitMQ_register.ini", "testServer");
 $server->process_requests('requestProcessor');
