@@ -37,7 +37,7 @@ function doLogin($username, $password)
 
 function requestProcessor($request)
 {
-
+echo "routing key: " . print_r($request, true) . PHP_EOL;
    echo "received request" . PHP_EOL;
     var_dump($request);
 
