@@ -69,7 +69,8 @@ echo "routing key: " . print_r($request, true) . PHP_EOL;
     return ['ok' => false, 'error' => 'Unsupported type']; 
 }
 
-$server = new rabbitMQServer("testRabbitMQ.ini", "testServer");
+$ini = isset($argv[1]) ? $argv[1] : "testRabbitMQ.ini";
+$server = new rabbitMQServer($ini, "testServer");
 $server->process_requests('requestProcessor');
 exit();
 ?>
