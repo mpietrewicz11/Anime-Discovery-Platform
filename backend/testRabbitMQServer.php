@@ -35,6 +35,12 @@ function doLogin($username, $password)
     return ['ok' => (bool)$ok];
 }
 
+
+// handlers/listeners for watchlist and reviews/rating
+
+ 
+
+
 function requestProcessor($request)
 {
 echo "routing key: " . print_r($request, true) . PHP_EOL;

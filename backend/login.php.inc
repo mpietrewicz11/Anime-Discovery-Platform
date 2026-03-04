@@ -52,7 +52,7 @@ public function createSession($username)
 {
     $un = $this->logindb->real_escape_string($username);
     $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-    $row = $result->fetch_assoc();
+    $row = $result->fetch_assoc();s
     if (!$row) return false;
 
     $sessionKey = bin2hex(random_bytes(32));
@@ -72,5 +72,86 @@ public function validateSession($sessionId)
     return (bool)$result->fetch_assoc();
 }
 
+public function addToWatchlist($username, $animeID, $animeTitle)
+{
+	$un = $this->logindb->real_escape_string($username);
+	$result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+	$row = $result->fetch_assoc();
+
+	if (!$row) returns false;
+
+
+	$userId = $row['id'];
+	$aid = (int)$animeId;
+	$title = $this->logindb->real_escape_string($animeTitle);
+	
+  
+	$check = $this->$logindb->query("SELECT id FROM watchlist WHERE user_id = $userId AND anime_id = $aid);
+	if ($check->fetch_assoc()) return false;
+
+
+	$statement = "INSERT INTO watchlist (user_id, anime_id, anime_title, added_at) VALUES ($userId, $aid, '$title', NOW())";
+	$this->logindb->query($statement);
+	return true;
+
+}
+
+	public function getWachlist($username)
+{
+
+	$un = $this->logindb->real_escape_string($username);
+	$result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+	$row = $result->fetch_assoc();
+
+	$if (!$row) return false;
+	
+	$userId = $row['id'];
+	
+
+	$response = $this->logindb->query("SELECR anime_id, anime_title, added_at FROM watchlist WHERE user_id = $uerId");
+	
+	$list = [];
+	while ($row = $response->fetchassoc())
+{
+	$list[] = $row;
+}
+
+	return $list;
+}
+
+
+	public function addReview($username, $animeId, $animeTitle, $rating, $reviewText)
+{
+	$result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+	$row = $result->fetch_assoc();
+	
+	if (!$row) return false;
+
+	$userId = $row['id'];
+	$aid = (int)$animeId;
+	$title = $this->logindb->real_escape_string($animeTitle);
+	$rating = (int)$rating;
+	$text = $this->logindb->real_escape_string($reviewText);
+	$statement = "INSERT INTO reviews (user_id, anime_id, anime_title, rating, review_text, created_at) VALUES ($userId, $aid, '$title', $rating, '$text', NOW())";
+	return $this -> logindb->query($statement);
+}
+
+	public function getReviews($animeID)
+{
+
+	$aid = (int)$animeId;
+	$statement = "SELECT u.username, r.rating, r.review_text, r.created_at FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.anime_id = $aid";
+	$response = $this->logindb->query($statement);
+
+	$list = [];
+	while ($row = $response->fetch_assoc())
+{
+		$list[] = $row;
+}
+	return $list;
+
+}
+
 }
 ?>
+
