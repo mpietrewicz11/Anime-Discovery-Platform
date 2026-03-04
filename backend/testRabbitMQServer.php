@@ -53,7 +53,7 @@ function doGetWatchlist($username)
 function doAddReview($username, $animeId, $animeTitle, $rating, $reviewText)
 {
 	$db = new loginDB();
-	return $db->addReview($username, $animeID, $animeTitle, $rating, $reviewText)
+	return $db->addReview($username, $animeId, $animeTitle, $rating, $reviewText);
 }
 	
 function doGetReviews($animeId)
@@ -92,6 +92,14 @@ echo "routing key: " . print_r($request, true) . PHP_EOL;
                 return ['ok' => false, 'error' => 'Missing sessionId'];
             }
             return doValidate($request['sessionId']);
+	case "add_watchlist":
+		return doAddWatchlist($request['username'], $request['anime_id'], $request['anime_title']);
+	case "get_watchlist":
+		return doGetWatchlist($request['username']);
+	case "add_review":
+		return doAddReview($request['username'], $request['anime_id'], $request['anime_title'], $request['rating'], $request['review_text']);
+	case "get_reviews":
+		return doGetReviews($request['anime_id']);
     }
 
     return ['ok' => false, 'error' => 'Unsupported type']; 
