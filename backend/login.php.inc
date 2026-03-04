@@ -52,7 +52,7 @@ public function createSession($username)
 {
     $un = $this->logindb->real_escape_string($username);
     $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-    $row = $result->fetch_assoc();s
+    $row = $result->fetch_assoc();
     if (!$row) return false;
 
     $sessionKey = bin2hex(random_bytes(32));
