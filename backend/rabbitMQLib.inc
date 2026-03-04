@@ -39,11 +39,14 @@ class rabbitMQServer
 	function process_message($msg)
 	{
 		// send the ack to clear the item from the queue
+	         $this->conn_queue->ack($msg->getDeliveryTag());
+
+
 		if ($msg->getRoutingKey() !== "*")
 		{
 			return;
 		}
-		$this->conn_queue->ack($msg->getDeliveryTag());
+		
 		try
 		{
 			if ($msg->getReplyTo())
