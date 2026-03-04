@@ -1,40 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background: #0f1220;
+      color: #e9ecff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      padding:20px;
+    }
+
+    .card{
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    h1{
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    .sub{
+      margin: 0 0 18px;
+      color: rgba(233,236,255,0.75);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    label{
+      display:block;
+      margin: 10px 0 6px;
+      font-size: 13px;
+      color: rgba(233,236,255,0.75);
+    }
+
+    input{
+      width:100%;
+      padding:10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.25);
+      color: #e9ecff;
+      outline:none;
+    }
+
+    input:focus{
+      border-color: rgba(124,92,255,0.7);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: rgba(233,236,255,0.75);
+    }
+
+    .row input{
+      width:auto;
+      margin:0;
+    }
+
+    .msg{
+      display:none;
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,77,109,0.35);
+      background: rgba(255,77,109,0.10);
+      color: #ffb3c1;
+      font-size: 14px;
+    }
+
+    button{
+      width:100%;
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      cursor:pointer;
+      background: #7c5cff;
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    button:hover{
+      filter: brightness(1.05);
+    }
+
+    .link{
+      margin-top: 14px;
+      font-size: 14px;
+      color: rgba(233,236,255,0.75);
+    }
+
+    .link a{
+      color: #7c5cff;
+      text-decoration:none;
+    }
+
+    .link a:hover{
+      text-decoration:underline;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="card">
+    <h1>Register</h1>
+    <p class="sub">Create an account so you can rate, comment, and save anime to your watchlist.</p>
 
-<h1>Register</h1>
+    <div id="msg" class="msg"></div>
 
-<script>
-    // Display messages based on URL parameters
+    <form id="registerForm" action="register.php" method="POST">
+      <label for="username">Username</label>
+      <input id="username" type="text" name="username" autocomplete="username" required />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" name="password" autocomplete="new-password" required />
+
+      <label for="confirm">Confirm password</label>
+      <input id="confirm" type="password" autocomplete="new-password" required />
+
+      <div class="row">
+        <input id="showPass" type="checkbox" />
+        <span>Show password</span>
+      </div>
+
+      <button type="submit">Register</button>
+    </form>
+
+    <div class="link">
+      Already have an account? <a href="login.html">Login</a>
+    </div>
+  </div>
+
+  <script>
+    // Show serverside messages based on URL parameters
     const params = new URLSearchParams(window.location.search);
+    const msgBox = document.getElementById("msg");
+
+    function showMsg(text) {
+      msgBox.textContent = text;
+      msgBox.style.display = "block";
+    }
 
     if (params.get("error") === "fields_required") {
-        document.write("<p style='color:red;'>All fields are required.</p>");
+      showMsg("All fields are required.");
     }
 
     if (params.get("error") === "register_failed") {
-        document.write("<p style='color:red;'>Registration failed. Username may already exist.</p>");
+      showMsg("Registration failed. Username may already exist.");
     }
-</script>
 
-<form action="register.php" method="POST">
+    // Show/hide password
+    document.getElementById("showPass").addEventListener("change", (e) => {
+      const type = e.target.checked ? "text" : "password";
+      document.getElementById("password").type = type;
+      document.getElementById("confirm").type = type;
+    });
 
-    <label>Username:</label><br>
-    <input type="text" name="username" required><br><br>
+    // Client-side check before submitting to PHP
+    document.getElementById("registerForm").addEventListener("submit", (e) => {
+      const p1 = document.getElementById("password").value.trim();
+      const p2 = document.getElementById("confirm").value.trim();
 
-    <label>Password:</label><br>
-    <input type="password" name="password" required><br><br>
+      if (p1.length < 4) {
+        e.preventDefault();
+        showMsg("Password should be at least 4 characters.");
+        return;
+      }
 
-    <button type="submit">Register</button>
-
-</form>
-
-<br>
-<a href="login.html">Already have an account? Login</a>
-
+      if (p1 !== p2) {
+        e.preventDefault();
+        showMsg("Passwords do not match.");
+        return;
+      }
+    });
+  </script>
 </body>
 </html>
-
