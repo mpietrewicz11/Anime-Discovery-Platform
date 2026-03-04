@@ -13,7 +13,7 @@ $username = htmlspecialchars($_SESSION['username']);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Anime Details</title>
+  <title>ADEM Project - Anime Details</title>
 
   <style>
     :root{
@@ -204,7 +204,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
 <body>
   <div class="navbar">
-    <div class="brand">AnimeHub</div>
+    <div class="brand">ADEM Project</div>
     <div class="nav-links">
       <a href="home.php">Home</a>
       <a href="watchlists.php">Watchlists</a>
@@ -273,7 +273,6 @@ $username = htmlspecialchars($_SESSION['username']);
   <div id="toast" class="toast"></div>
 
   <script>
-    // helpers
     const JIKAN_BASE = "https://api.jikan.moe/v4";
     const username = <?php echo json_encode($username); ?>;
 
@@ -304,10 +303,26 @@ $username = htmlspecialchars($_SESSION['username']);
       return res.json();
     }
 
-    // localStorage keys 
+    async function postForm(url, dataObj){
+      const form = new URLSearchParams();
+      Object.entries(dataObj).forEach(([k,v]) => form.append(k, v));
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString()
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.ok !== true) {
+        throw new Error(json.error || "Request failed");
+      }
+      return json;
+    }
+
+    // localStorage keys (ratings + comments only for now)
     function ratingsKey(){ return "ratings_" + username; }
     function commentsKey(){ return "comments_" + username; }
-    function watchlistKey(){ return "watchlist_" + username; }
 
     function loadJson(key){
       try { return JSON.parse(localStorage.getItem(key)) || {}; }
@@ -317,7 +332,6 @@ $username = htmlspecialchars($_SESSION['username']);
       localStorage.setItem(key, JSON.stringify(obj));
     }
 
-    // render comments
     function renderComments(animeId){
       const wrap = document.getElementById("comments");
       const all = loadJson(commentsKey());
@@ -341,8 +355,6 @@ $username = htmlspecialchars($_SESSION['username']);
         `).join("");
     }
 
-
-    // main load
     const animeId = getId();
     if (!animeId){
       toast("Missing anime id.");
@@ -352,11 +364,10 @@ $username = htmlspecialchars($_SESSION['username']);
       const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}`);
       const a = json.data;
 
-      // poster/title
-      document.getElementById("poster").src = a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "";
+      document.getElementById("poster").src =
+        a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "";
       document.getElementById("title").textContent = a.title || "Untitled";
 
-      // meta info
       const year = a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : "—");
       const score = a.score ? `${a.score}/10` : "N/A";
       const eps = a.episodes ? `${a.episodes} eps` : "—";
@@ -372,10 +383,9 @@ $username = htmlspecialchars($_SESSION['username']);
         ${genres}
       `;
 
-      // synopsis
-      document.getElementById("synopsis").textContent = a.synopsis ? a.synopsis : "No synopsis available.";
+      document.getElementById("synopsis").textContent =
+        a.synopsis ? a.synopsis : "No synopsis available.";
 
-      // MAL link
       const malUrl = a.url || "";
       const link = document.getElementById("jikanLink");
       link.href = malUrl ? malUrl : "#";
@@ -387,18 +397,30 @@ $username = htmlspecialchars($_SESSION['username']);
       document.getElementById("yourRating").textContent = saved ? `${saved}/10` : "—";
       document.getElementById("ratingSelect").value = saved ? String(saved) : "";
 
-      // watchlist button state
-      const watch = loadJson(watchlistKey());
-      const inList = Boolean(watch[animeId]);
+      // watchlist button state (DB via RabbitMQ endpoint)
       const wlBtn = document.getElementById("watchlistBtn");
-      wlBtn.textContent = inList ? "In Watchlist ✓" : "Add to Watchlist";
-      if (inList) wlBtn.classList.add("ok");
+      wlBtn.textContent = "Add to Watchlist";
+      wlBtn.classList.remove("ok");
 
-      // comments
+      try {
+        const res = await fetch("watchlist_get.php");
+        const data = await res.json();
+
+        if (data.ok === true && Array.isArray(data.data)) {
+          const inList = data.data.some(item => String(item.anime_id) === String(animeId));
+          if (inList) {
+            wlBtn.textContent = "In Watchlist ✓";
+            wlBtn.classList.add("ok");
+          }
+        }
+      } catch (e) {
+        // If backend is down, don't block the page
+      }
+
       renderComments(animeId);
     }
 
-    // actions: rating / comment / watchlist
+    // rating
     document.getElementById("saveRatingBtn").addEventListener("click", () => {
       const val = document.getElementById("ratingSelect").value;
       if (!val) return toast("Pick a rating first.");
@@ -411,6 +433,7 @@ $username = htmlspecialchars($_SESSION['username']);
       toast("Rating saved.");
     });
 
+    // comments
     document.getElementById("postCommentBtn").addEventListener("click", () => {
       const text = document.getElementById("commentText").value.trim();
       if (!text) return toast("Write a comment first.");
@@ -429,32 +452,39 @@ $username = htmlspecialchars($_SESSION['username']);
       toast("Comment posted.");
     });
 
-    document.getElementById("watchlistBtn").addEventListener("click", () => {
-      const watch = loadJson(watchlistKey());
+    // watchlist (DB via RabbitMQ endpoints)
+    document.getElementById("watchlistBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("watchlistBtn");
 
-      if (watch[animeId]) {
-        // toggle off
-        delete watch[animeId];
-        saveJson(watchlistKey(), watch);
-
-        const btn = document.getElementById("watchlistBtn");
-        btn.textContent = "Add to Watchlist";
-        btn.classList.remove("ok");
-        toast("Removed from watchlist.");
+      // remove if already in list
+      if (btn.classList.contains("ok")) {
+        try {
+          await postForm("watchlist_remove.php", { anime_id: animeId });
+          btn.textContent = "Add to Watchlist";
+          btn.classList.remove("ok");
+          toast("Removed from watchlist.");
+        } catch (e) {
+          toast(e.message);
+        }
         return;
       }
 
-      // store minimal info for watchlist display later
-      watch[animeId] = { addedAt: Date.now() };
-      saveJson(watchlistKey(), watch);
-
-      const btn = document.getElementById("watchlistBtn");
-      btn.textContent = "In Watchlist ✓";
-      btn.classList.add("ok");
-      toast("Added to watchlist.");
+      // add if not in list
+      try {
+        const title = document.getElementById("title").textContent.trim();
+        await postForm("watchlist_add.php", {
+          anime_id: animeId,
+          title: title,
+          status: "plan_of_watch"
+        });
+        btn.textContent = "In Watchlist ✓";
+        btn.classList.add("ok");
+        toast("Added to watchlist.");
+      } catch (e) {
+        toast(e.message);
+      }
     });
 
-    // Load on start
     loadAnime().catch(() => {
       document.getElementById("title").textContent = "Could not load anime details.";
       toast("Could not load anime details.");
