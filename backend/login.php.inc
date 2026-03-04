@@ -90,7 +90,7 @@ public function addToWatchlist($username, $animeId, $animeTitle)
 	if ($check->fetch_assoc()) return false;
 
 
-	$statement = "INSERT INTO watchlist (user_id, anime_id, title, added_at) VALUES ($userId, $aid, '$title', NOW())";
+	$statement = "INSERT INTO watch_list (user_id, anime_id, title, added_at) VALUES ($userId, $aid, '$title', NOW())";
 	$this->logindb->query($statement);
 	return true;
 
