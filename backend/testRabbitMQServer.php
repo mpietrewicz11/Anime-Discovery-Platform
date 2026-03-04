@@ -38,7 +38,29 @@ function doLogin($username, $password)
 
 // handlers/listeners for watchlist and reviews/rating
 
- 
+function doAddWatchlist($username, $animeId, $animeTitle)
+{
+	$db = new loginDB();
+	return $db->addToWatchlist($username, $animeId, $animeTitle);
+}
+
+function doGetWatchlist($username)
+{
+	$db = new loginDB();
+	return $db->getWatchlist($username);
+}
+
+function doAddReview($username, $animeId, $animeTitle, $rating, $reviewText)
+{
+	$db = new loginDB();
+	return $db->addReview($username, $animeID, $animeTitle, $rating, $reviewText)
+}
+	
+function doGetReviews($animeId)
+{
+	$db = new loginDB();
+	return $db->getReviews($animeId);
+} 
 
 
 function requestProcessor($request)
