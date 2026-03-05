@@ -47,7 +47,8 @@ function doAddWatchlist($username, $animeId, $animeTitle)
 function doGetWatchlist($username)
 {
 	$db = new loginDB();
-	return $db->getWatchlist($username);
+	$list = $db->getWatchlist($username);
+	return ['ok' => true, 'data' => $list];
 }
 
 function doAddReview($username, $animeId, $animeTitle, $rating, $reviewText)
