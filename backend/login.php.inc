@@ -153,7 +153,30 @@ $un = $this->logindb->real_escape_string($username);
 	return $list;
 
 }
+	public function getTopAnime($limit = 12) {
+  	$limit = (int)$limit;
+  	if ($limit < 1) $limit = 12;
+  	if ($limit > 50) $limit = 50;
 
+  // If your cron script stores "Top" in genre column:
+ 	$sql = "SELECT mal_id, title, score, episodes, poster, year
+          	FROM anime
+          	WHERE genre='Top'
+          	ORDER BY score DESC
+         	LIMIT $limit";
+
+  $result = $this->conn->query($sql);
+  if (!$result) {
+    return ["ok" => false, "error" => "DB error: " . $this->conn->error];
+  }
+
+  $rows = [];
+  while ($row = $result->fetch_assoc()) {
+    $rows[] = $row;
+  }
+
+  return ["ok" => true, "data" => $rows];
+}
 
 	public function logindb_escape($str)
 {

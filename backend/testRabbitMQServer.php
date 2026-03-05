@@ -109,6 +109,9 @@ echo "routing key: " . print_r($request, true) . PHP_EOL;
 	case "get_anime_list":
 		$genre = $request['genre'] ?? 'Top';
 		return doGetAnimeList($genre);
+	case "get_top_anime":
+  		$limit = isset($request["limit"]) ? (int)$request["limit"] : 12;
+ 		 return $db->getTopAnime($limit);
     }
 
     return ['ok' => false, 'error' => 'Unsupported type']; 
