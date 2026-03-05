@@ -36,4 +36,5 @@ if ($response === null) {
     exit;
 }
 
+error_log("watchlist response: " . print_r($response, true));
 echo json_encode($response);
