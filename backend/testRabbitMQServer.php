@@ -63,6 +63,11 @@ function doGetReviews($animeId)
 	return $db->getReviews($animeId);
 } 
 
+function doGetAnimeList($genre)
+{
+	$db = new loginDB();
+	return $db->getAnimeList($genre);
+}
 
 function requestProcessor($request)
 {
@@ -101,6 +106,9 @@ echo "routing key: " . print_r($request, true) . PHP_EOL;
 		return doAddReview($request['username'], $request['anime_id'], $request['anime_title'], $request['rating'], $request['review_text']);
 	case "get_reviews":
 		return doGetReviews($request['anime_id']);
+	case "get_anime_list":
+		$genre = $request['genre'] ?? 'Top';
+		return doGetAnimeList($genre);
     }
 
     return ['ok' => false, 'error' => 'Unsupported type']; 
