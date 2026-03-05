@@ -266,17 +266,14 @@ $username = htmlspecialchars($_SESSION['username']);
   </div>
 
   <script>
-    
-    // JIKAN SETUP
-    
+    // JIKAN SETUP (kept for now for genres/search + fallback)
     const JIKAN_BASE = "https://api.jikan.moe/v4";
-    const SFW = true;        
-    const LIMIT = 12;        // items per row
+    const SFW = true;
+    const LIMIT = 12;
     const TASTE_KEY = "taste_genres_v1";
 
-    
     const ROW_CONFIG = [
-      { key: "top",       title: "Top Anime", type: "top" },
+      { key: "top",       title: "Top Anime", type: "top" }, // <-- this one will try RabbitMQ endpoint first
       { key: "shounen",   title: "Shonen Picks", type: "demographic", name: "Shounen" },
       { key: "romance",   title: "Romance", type: "genre", name: "Romance" },
       { key: "comedy",    title: "Comedy", type: "genre", name: "Comedy" },
@@ -286,6 +283,20 @@ $username = htmlspecialchars($_SESSION['username']);
     ];
 
     function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    // Small fetch helper with timeout so it doesn't "spin forever"
+    async function fetchJson(url, opts = {}, timeoutMs = 8000){
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+      try{
+        const res = await fetch(url, { ...opts, signal: controller.signal });
+        const json = await res.json().catch(() => ({}));
+        return { res, json };
+      } finally {
+        clearTimeout(timer);
+      }
+    }
 
     async function jikanGet(path, params = {}) {
       const url = new URL(JIKAN_BASE + path);
@@ -311,9 +322,19 @@ $username = htmlspecialchars($_SESSION['username']);
       };
     }
 
-    
+    // Convert DB row: same shape as normalizeAnime()
+    // Expected backend response rows like: {mal_id, title, score, episodes, poster, year}
+    function normalizeFromDbRow(r){
+      return {
+        id: r.mal_id ?? r.id ?? r.anime_id,
+        title: r.title || "Untitled",
+        poster: r.poster || "",
+        year: r.year || null,
+        score: (r.score !== undefined && r.score !== null) ? Number(r.score) : null
+      };
+    }
+
     // (simple recommendation)
- 
     function getTaste(){
       try { return JSON.parse(localStorage.getItem(TASTE_KEY)) || {}; }
       catch { return {}; }
@@ -335,7 +356,6 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     // UI BUILDERS
-  
     const sectionsEl = document.getElementById("sections");
 
     function sectionHTML(key, title){
@@ -376,8 +396,6 @@ $username = htmlspecialchars($_SESSION['username']);
           const id = btn.getAttribute("data-id");
           const tag = btn.getAttribute("data-taste") || "Other";
           bumpTaste(tag);
-
-          // go to details page (you can build anime.php next)
           window.location.href = "anime.php?id=" + encodeURIComponent(id);
         });
       });
@@ -392,9 +410,7 @@ $username = htmlspecialchars($_SESSION['username']);
         .replaceAll("'","&#039;");
     }
 
-
-    // GENRE ID LOOKUP 
-
+    // GENRE ID LOOKUP
     async function getGenreIdByName(name){
       const cacheKey = "jikan_genres_cache_v1";
       let cache = {};
@@ -402,7 +418,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
       if (cache[name]) return cache[name];
 
-      const json = await jikanGet("/genres/anime", { filter: "genres" }); // genres list
+      const json = await jikanGet("/genres/anime", { filter: "genres" });
       const found = (json.data || []).find(g => (g.name || "").toLowerCase() === name.toLowerCase());
       const id = found ? found.mal_id : null;
 
@@ -418,7 +434,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
       if (cache[name]) return cache[name];
 
-      const json = await jikanGet("/genres/anime", { filter: "demographics" }); // demographics list
+      const json = await jikanGet("/genres/anime", { filter: "demographics" });
       const found = (json.data || []).find(d => (d.name || "").toLowerCase() === name.toLowerCase());
       const id = found ? found.mal_id : null;
 
@@ -427,12 +443,23 @@ $username = htmlspecialchars($_SESSION['username']);
       return id;
     }
 
- 
-    // LOAERS FOR EACH ROW
-  
+    // LOADERS FOR EACH ROW
+
+    //  UPDATED: Top row tries backend endpoint first (RabbitMQ path)
     async function loadTopRow(key){
-      const json = await jikanGet("/top/anime", { limit: LIMIT, sfw: SFW });
-      return (json.data || []).map(normalizeAnime);
+      // 1) Try backend endpoint (webserver -> RabbitMQ -> backend -> DB)
+      try{
+        const { res, json } = await fetchJson("get_top_anime.php?limit=" + encodeURIComponent(LIMIT), {}, 8000);
+        if (res.ok && json && json.ok === true && Array.isArray(json.data)) {
+          return json.data.map(normalizeFromDbRow).filter(x => x.id);
+        }
+      } catch(e){
+        // ignore and fallback
+      }
+
+      // 2) Fallback to Jikan if backend/RabbitMQ is down
+      const j = await jikanGet("/top/anime", { limit: LIMIT, sfw: SFW });
+      return (j.data || []).map(normalizeAnime);
     }
 
     async function loadGenreRow(key, genreName){
@@ -451,7 +478,6 @@ $username = htmlspecialchars($_SESSION['username']);
     async function loadDemographicRow(key, demoName){
       const demoId = await getDemographicIdByName(demoName);
       if (!demoId) return [];
-      // Jikan supports demographics filtering via the /anime endpoint
       const json = await jikanGet("/anime", {
         demographics: demoId,
         order_by: "score",
@@ -462,7 +488,7 @@ $username = htmlspecialchars($_SESSION['username']);
       return (json.data || []).map(normalizeAnime);
     }
 
-    // RECOMMENDED ROW 
+    // RECOMMENDED ROW
     async function buildRecommended(){
       const recRow = document.getElementById("recommendedRow");
       const empty = document.getElementById("recommendedEmpty");
@@ -480,7 +506,6 @@ $username = htmlspecialchars($_SESSION['username']);
       empty.style.display = "none";
       hint.textContent = "Because you seem to like " + prefs.join(" + ");
 
-      // Try to pull from your top taste tags (these match row titles like Romance, Comedy, etc.)
       let combined = [];
 
       for (const tag of prefs) {
@@ -492,11 +517,10 @@ $username = htmlspecialchars($_SESSION['username']);
             list = await loadGenreRow("rec", tag);
           }
           combined = combined.concat(list);
-          await sleep(350); // small pause to be nice to rate limits
+          await sleep(350);
         } catch(e) {}
       }
 
-      // remove duplicates by id
       const seen = new Set();
       const unique = [];
       for (const a of combined) {
@@ -506,12 +530,10 @@ $username = htmlspecialchars($_SESSION['username']);
       renderRow(recRow, unique.slice(0, LIMIT), prefs[0]);
     }
 
-    // Search bar
-
+    // SEARCH BAR
     let searchTimer = null;
 
     async function doSearch(q){
-      // When searching, we clear other sections and show results in recommended row area
       const hint = document.getElementById("recHint");
       const empty = document.getElementById("recommendedEmpty");
       const recRow = document.getElementById("recommendedRow");
@@ -548,6 +570,8 @@ $username = htmlspecialchars($_SESSION['username']);
         empty.style.display = "none";
         renderRow(recRow, list.slice(0, 18), "Search");
       } catch (e) {
+        // If search fails, show a real message and log the error
+        console.error("Search failed:", e);
         recRow.innerHTML = "";
         empty.textContent = "Search failed (try again).";
         empty.style.display = "block";
@@ -560,14 +584,10 @@ $username = htmlspecialchars($_SESSION['username']);
       searchTimer = setTimeout(() => doSearch(q), 450);
     });
 
-  
-    // build sections and  load rows
-
+    // BUILD SECTIONS + LOAD ROWS
     async function init(){
-      // build all row sections
       sectionsEl.innerHTML = ROW_CONFIG.map(r => sectionHTML(r.key, r.title)).join("");
 
-      // load each row (with small delays to be nice to rate limits)
       for (const r of ROW_CONFIG) {
         const rowEl = document.getElementById("row-" + r.key);
         const loaderEl = document.getElementById("loader-" + r.key);
@@ -585,12 +605,13 @@ $username = htmlspecialchars($_SESSION['username']);
             renderRow(rowEl, list, r.name);
           }
         } catch (e) {
+          console.error("Row load failed:", r.key, e);
           rowEl.innerHTML = `<div class="empty">Could not load this row right now.</div>`;
         } finally {
           loaderEl.style.display = "none";
         }
 
-        await sleep(400); // helps avoid hitting the per-second rate limit
+        await sleep(400);
       }
 
       await buildRecommended();
