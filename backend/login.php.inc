@@ -170,6 +170,24 @@ $un = $this->logindb->real_escape_string($username);
 
 }
 
+
+	public function getAnimeList($genre)
+{
+
+	$g = $this->logindb->real_escape_string($genre);
+	$statement = "SELECT mal_id, title, poster, score, year FROM anime_cache WHERE genre = '$g' ORDER BY score DESC Limit 25";
+	$response = $this->logindb->query($statement);
+
+	$list = [];
+	while ($row = $response->fetch_assoc())
+	{
+		$list[] = row;
+
+	}
+	return ['ok' => true, 'data' => $list];
+
+	}
+
 }
 ?>
 
