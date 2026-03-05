@@ -154,6 +154,22 @@ $un = $this->logindb->real_escape_string($username);
 
 }
 
+
+	public function logindb_escape($str)
+{
+
+	return $this->logindb->real_escape_string($str);
+}
+
+	public function upsertAnime($animeId, $title, $score, $episodes)
+{
+
+	$statement = "INSERT INTO anime (anime_id, title, score, episodes, updated_at) VALUES ($animeId, '$title', $score, $episodes, NOW()) ON DUPLICATE KEY UPDATE title='$title', score=$score, episodes=$episodes, updated_at=NOW()";
+
+		return $this->logindb->query($statement);
+
+}
+
 }
 ?>
 
