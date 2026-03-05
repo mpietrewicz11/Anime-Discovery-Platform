@@ -42,6 +42,7 @@ function doAddWatchlist($username, $animeId, $animeTitle)
 {
 	$db = new loginDB();
 	return $db->addToWatchlist($username, $animeId, $animeTitle);
+	return ['ok' => true];
 }
 
 function doGetWatchlist($username)
