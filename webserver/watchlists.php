@@ -138,12 +138,6 @@ $username = htmlspecialchars($_SESSION['username']);
       font-weight: 700;
     }
 
-    .btn.danger{
-      border-color: rgba(255,77,109,0.35);
-      background: rgba(255,77,109,0.10);
-      color: #ffb3c1;
-    }
-
     .empty{
       color: var(--muted);
       font-size: 13px;
@@ -180,7 +174,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
   <div class="container">
     <h1>Your Watchlist</h1>
-    <p class="sub">Saved anime will show up here. You can open details or remove them.</p>
+    <p class="sub">Saved anime will show up here. Click details to open the anime page.</p>
 
     <div id="content"></div>
   </div>
@@ -198,18 +192,26 @@ $username = htmlspecialchars($_SESSION['username']);
       setTimeout(() => el.classList.remove("show"), 2400);
     }
 
-    function watchlistKey(){ return "watchlist_" + username; }
-
-    function loadWatchlist(){
-      try {
-        return JSON.parse(localStorage.getItem(watchlistKey())) || {};
-      } catch {
-        return {};
-      }
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
     }
 
-    function saveWatchlist(obj){
-      localStorage.setItem(watchlistKey(), JSON.stringify(obj));
+    async function fetchWatchlist(){
+      const res = await fetch("watchlist_get.php");
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok || json.ok !== true) {
+        throw new Error(json.error || "Could not load watchlist");
+      }
+
+      // We expect: { ok:true, data:[ {anime_id, title, ...}, ... ] }
+      if (!Array.isArray(json.data)) return [];
+      return json.data;
     }
 
     async function fetchAnime(id){
@@ -227,44 +229,41 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     function cardHTML(item){
+      const scoreText = item.score === "N/A" ? "N/A" : `${item.score}/10`;
       return `
         <div class="card" data-id="${item.id}">
           <img class="poster" src="${item.poster}" alt="${escapeHtml(item.title)}" loading="lazy">
           <div class="title">${escapeHtml(item.title)}</div>
           <div class="meta">
-            <span class="pill">⭐ ${item.score}/10</span>
-            <span>${item.year}</span>
+            <span class="pill">⭐ ${scoreText}</span>
+            <span>${escapeHtml(String(item.year))}</span>
           </div>
           <div class="btnRow">
             <button class="btn primary" data-action="details">Details</button>
-            <button class="btn danger" data-action="remove">Remove</button>
           </div>
         </div>
       `;
     }
 
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-
     async function render(){
       const content = document.getElementById("content");
-      const watch = loadWatchlist();
-      const ids = Object.keys(watch);
+      content.innerHTML = `<div class="empty">Loading your watchlist...</div>`;
+
+      let list = [];
+      try {
+        list = await fetchWatchlist();
+      } catch (e) {
+        content.innerHTML = `<div class="empty">${escapeHtml(e.message)}</div>`;
+        return;
+      }
+
+      const ids = list.map(x => x.anime_id).filter(Boolean);
 
       if (ids.length === 0){
         content.innerHTML = `<div class="empty">Your watchlist is empty. Go to Home and add a few anime.</div>`;
         return;
       }
 
-      content.innerHTML = `<div class="empty">Loading your watchlist...</div>`;
-
-      // Fetch details for each saved id (small delay to avoid rate limit)
       const items = [];
       for (const id of ids){
         try{
@@ -283,27 +282,11 @@ $username = htmlspecialchars($_SESSION['username']);
 
       content.innerHTML = `<div class="grid">${items.map(cardHTML).join("")}</div>`;
 
-      // button actions
-      content.querySelectorAll(".card").forEach(card => {
-        const id = card.getAttribute("data-id");
-
-        card.querySelectorAll("button[data-action]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const action = btn.getAttribute("data-action");
-
-            if (action === "details") {
-              window.location.href = "anime.php?id=" + encodeURIComponent(id);
-              return;
-            }
-
-            if (action === "remove") {
-              const watch2 = loadWatchlist();
-              delete watch2[id];
-              saveWatchlist(watch2);
-              toast("Removed from watchlist.");
-              render();
-            }
-          });
+      content.querySelectorAll("button[data-action='details']").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const card = btn.closest(".card");
+          const id = card.getAttribute("data-id");
+          window.location.href = "anime.php?id=" + encodeURIComponent(id);
         });
       });
     }

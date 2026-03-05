@@ -216,7 +216,6 @@ $username = htmlspecialchars($_SESSION['username']);
     <div class="muted">Logged in as <b><?php echo $username; ?></b></div>
 
     <div class="grid">
-      <!-- Left: poster -->
       <div class="card">
         <img id="poster" class="poster" alt="Poster" />
         <div class="btnRow">
@@ -228,7 +227,6 @@ $username = htmlspecialchars($_SESSION['username']);
         </div>
       </div>
 
-      <!-- Right: details -->
       <div class="card">
         <h1 id="title">Loading...</h1>
         <div class="meta" id="meta"></div>
@@ -265,7 +263,6 @@ $username = htmlspecialchars($_SESSION['username']);
           <div class="muted" style="font-size:13px;"><b>Comments</b></div>
           <div id="comments" class="comments"></div>
         </div>
-
       </div>
     </div>
   </div>
@@ -320,7 +317,6 @@ $username = htmlspecialchars($_SESSION['username']);
       return json;
     }
 
-    // localStorage keys (ratings + comments only for now)
     function ratingsKey(){ return "ratings_" + username; }
     function commentsKey(){ return "comments_" + username; }
 
@@ -391,13 +387,12 @@ $username = htmlspecialchars($_SESSION['username']);
       link.href = malUrl ? malUrl : "#";
       if (!malUrl) link.style.display = "none";
 
-      // load user rating from storage
       const ratings = loadJson(ratingsKey());
       const saved = ratings[animeId];
       document.getElementById("yourRating").textContent = saved ? `${saved}/10` : "—";
       document.getElementById("ratingSelect").value = saved ? String(saved) : "";
 
-      // watchlist button state (DB via RabbitMQ endpoint)
+      // Watchlist button state (read from backend)
       const wlBtn = document.getElementById("watchlistBtn");
       wlBtn.textContent = "Add to Watchlist";
       wlBtn.classList.remove("ok");
@@ -414,13 +409,12 @@ $username = htmlspecialchars($_SESSION['username']);
           }
         }
       } catch (e) {
-        // If backend is down, don't block the page
+        // backend might be down; ignore
       }
 
       renderComments(animeId);
     }
 
-    // rating
     document.getElementById("saveRatingBtn").addEventListener("click", () => {
       const val = document.getElementById("ratingSelect").value;
       if (!val) return toast("Pick a rating first.");
@@ -433,7 +427,6 @@ $username = htmlspecialchars($_SESSION['username']);
       toast("Rating saved.");
     });
 
-    // comments
     document.getElementById("postCommentBtn").addEventListener("click", () => {
       const text = document.getElementById("commentText").value.trim();
       if (!text) return toast("Write a comment first.");
@@ -452,31 +445,21 @@ $username = htmlspecialchars($_SESSION['username']);
       toast("Comment posted.");
     });
 
-    // watchlist (DB via RabbitMQ endpoints)
+    // Watchlist: add only (backend doesn't support remove yet)
     document.getElementById("watchlistBtn").addEventListener("click", async () => {
       const btn = document.getElementById("watchlistBtn");
 
-      // remove if already in list
       if (btn.classList.contains("ok")) {
-        try {
-          await postForm("watchlist_remove.php", { anime_id: animeId });
-          btn.textContent = "Add to Watchlist";
-          btn.classList.remove("ok");
-          toast("Removed from watchlist.");
-        } catch (e) {
-          toast(e.message);
-        }
-        return;
+        return toast("Already in your watchlist.");
       }
 
-      // add if not in list
       try {
         const title = document.getElementById("title").textContent.trim();
         await postForm("watchlist_add.php", {
           anime_id: animeId,
-          title: title,
-          status: "plan_of_watch"
+          title: title
         });
+
         btn.textContent = "In Watchlist ✓";
         btn.classList.add("ok");
         toast("Added to watchlist.");
