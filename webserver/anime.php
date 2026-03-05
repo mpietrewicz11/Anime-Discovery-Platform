@@ -126,6 +126,11 @@ $username = htmlspecialchars($_SESSION['username']);
       border-radius:12px;
       cursor:pointer;
       font-size: 14px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
     }
     .btn:hover{ background: rgba(255,255,255,0.10); }
 
@@ -199,6 +204,72 @@ $username = htmlspecialchars($_SESSION['username']);
       max-width: 92vw;
     }
     .toast.show{ display:block; }
+
+    /* Episodes + watch options */
+    .sectionTitle{
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .list{
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .rowItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .rowItem:first-child{ border-top: none; }
+
+    .rowLeft{
+      min-width: 0;
+    }
+    .rowLeft b{
+      font-size: 13px;
+    }
+    .rowLeft .small{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 520px;
+    }
+
+    .miniBtn{
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size: 13px;
+      text-decoration:none;
+      white-space: nowrap;
+    }
+    .miniBtn:hover{ background: rgba(255,255,255,0.10); }
+
+    .miniBtn.primary{
+      background: var(--accent);
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .note{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 8px;
+    }
   </style>
 </head>
 
@@ -225,6 +296,21 @@ $username = htmlspecialchars($_SESSION['username']);
         <div class="muted" style="margin-top:10px;font-size:13px">
           Your rating: <b id="yourRating">—</b>
         </div>
+
+        <div style="height:14px"></div>
+
+        <!-- Watch options -->
+        <div class="card" style="padding:14px;">
+          <div class="sectionTitle">Where to watch</div>
+          <div class="btnRow" style="margin-top:8px;">
+            <a id="watchCrunchyroll" class="btn" target="_blank" rel="noreferrer">Crunchyroll</a>
+            <a id="watchNetflix" class="btn" target="_blank" rel="noreferrer">Netflix</a>
+            <a id="watchHulu" class="btn" target="_blank" rel="noreferrer">Hulu</a>
+          </div>
+          <div class="note">
+            These links open the provider search page for this title.
+          </div>
+        </div>
       </div>
 
       <div class="card">
@@ -238,6 +324,27 @@ $username = htmlspecialchars($_SESSION['username']);
 
         <div style="height:14px"></div>
 
+        <!-- Episodes -->
+        <div class="card" style="padding:14px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div class="sectionTitle" style="margin:0;">Episodes</div>
+            <div class="btnRow" style="margin:0;">
+              <button id="loadEpisodesBtn" class="btn">Load Episodes</button>
+              <a id="episodesOnMAL" class="btn" target="_blank" rel="noreferrer">MAL Episodes</a>
+            </div>
+          </div>
+
+          <div id="episodesNote" class="note">
+            Click “Load Episodes” to see the list. Then use “Watch” to open a provider search for that title.
+          </div>
+
+          <div style="height:10px"></div>
+          <div id="episodesWrap" class="list" style="display:none;"></div>
+        </div>
+
+        <div style="height:14px"></div>
+
+        <!-- Ratings + comments -->
         <div class="card" style="padding:14px;">
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
             <div>
@@ -356,13 +463,40 @@ $username = htmlspecialchars($_SESSION['username']);
       toast("Missing anime id.");
     }
 
+    // Keep these available across functions
+    let currentTitle = "";
+    let malUrl = "";
+
+    function setProviderLinks(title){
+      // Simple provider search links (legal / safe)
+      const q = encodeURIComponent(title);
+
+      // These are search pages; availability depends on user region/account.
+      document.getElementById("watchCrunchyroll").href = "https://www.crunchyroll.com/search?q=" + q;
+      document.getElementById("watchNetflix").href = "https://www.netflix.com/search?q=" + q;
+      document.getElementById("watchHulu").href = "https://www.hulu.com/search?q=" + q;
+    }
+
+    function setMALLinks(url){
+      const a = document.getElementById("jikanLink");
+      a.href = url ? url : "#";
+      if (!url) a.style.display = "none";
+
+      const ep = document.getElementById("episodesOnMAL");
+      ep.href = url ? (url.replace("/anime/", "/anime/") + "/episode") : "#";
+      // MAL episode URL format isn't always perfect; keep it as a convenience link
+      if (!url) ep.style.display = "none";
+    }
+
     async function loadAnime(){
       const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}`);
       const a = json.data;
 
       document.getElementById("poster").src =
         a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "";
-      document.getElementById("title").textContent = a.title || "Untitled";
+
+      currentTitle = a.title || "Untitled";
+      document.getElementById("title").textContent = currentTitle;
 
       const year = a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : "—");
       const score = a.score ? `${a.score}/10` : "N/A";
@@ -382,10 +516,9 @@ $username = htmlspecialchars($_SESSION['username']);
       document.getElementById("synopsis").textContent =
         a.synopsis ? a.synopsis : "No synopsis available.";
 
-      const malUrl = a.url || "";
-      const link = document.getElementById("jikanLink");
-      link.href = malUrl ? malUrl : "#";
-      if (!malUrl) link.style.display = "none";
+      malUrl = a.url || "";
+      setMALLinks(malUrl);
+      setProviderLinks(currentTitle);
 
       const ratings = loadJson(ratingsKey());
       const saved = ratings[animeId];
@@ -415,6 +548,109 @@ $username = htmlspecialchars($_SESSION['username']);
       renderComments(animeId);
     }
 
+    // Episodes
+    function episodeRowHTML(epNum, epTitle){
+      const safeTitle = currentTitle ? currentTitle : "anime";
+      const q = encodeURIComponent(safeTitle);
+
+      return `
+        <div class="rowItem">
+          <div class="rowLeft">
+            <b>Episode ${escapeHtml(String(epNum))}</b>
+            <div class="small">${escapeHtml(epTitle || "")}</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="miniBtn primary" target="_blank" rel="noreferrer"
+               href="https://www.crunchyroll.com/search?q=${q}">Watch</a>
+            <a class="miniBtn" target="_blank" rel="noreferrer"
+               href="https://www.netflix.com/search?q=${q}">Netflix</a>
+            <a class="miniBtn" target="_blank" rel="noreferrer"
+               href="https://www.hulu.com/search?q=${q}">Hulu</a>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadEpisodes(){
+      const btn = document.getElementById("loadEpisodesBtn");
+      const wrap = document.getElementById("episodesWrap");
+      const note = document.getElementById("episodesNote");
+
+      btn.disabled = true;
+      btn.textContent = "Loading...";
+      wrap.style.display = "block";
+      wrap.innerHTML = `<div class="rowItem"><div class="rowLeft"><b>Loading episodes...</b></div></div>`;
+
+      try {
+        // Jikan episodes are paginated
+        let page = 1;
+        let hasNext = true;
+        let all = [];
+
+        // Limit pages to avoid rate-limit and huge shows
+        const MAX_PAGES = 6;
+
+        while (hasNext && page <= MAX_PAGES) {
+          const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}/episodes?page=${page}`);
+          const list = Array.isArray(json.data) ? json.data : [];
+          all = all.concat(list);
+
+          hasNext = Boolean(json.pagination && json.pagination.has_next_page);
+          page += 1;
+
+          // small delay to be nice to Jikan
+          await new Promise(r => setTimeout(r, 250));
+        }
+
+        if (all.length === 0) {
+          wrap.innerHTML = `
+            <div class="rowItem">
+              <div class="rowLeft">
+                <b>No episodes found</b>
+                <div class="small">Some shows don’t have episode data available in Jikan.</div>
+              </div>
+            </div>
+          `;
+          note.textContent = "If episodes don't load, use the watch buttons above or open MAL.";
+          return;
+        }
+
+        // Render episodes
+        wrap.innerHTML = all.map(ep => {
+          const num = ep.mal_id ? ep.mal_id : (ep.episode_id || ep.episode || "?");
+          const epNum = ep.mal_id ? ep.mal_id : (ep.mal_id || ep.episode_id || ep.episode || "?");
+          const number = ep.mal_id ? ep.mal_id : (ep.mal_id || ep.episode_id || ep.episode || "?");
+
+          const n = ep.mal_id ? ep.mal_id : (ep.mal_id || ep.episode_id || ep.episode || "?");
+          const displayNum = ep.mal_id ? ep.mal_id : (ep.episode_id || ep.episode || ep.mal_id || "?");
+
+          // Jikan episode object typically has: mal_id (episode number), title, title_romanji, title_japanese
+          const title = ep.title || ep.title_romanji || ep.title_japanese || "";
+          return episodeRowHTML(displayNum, title);
+        }).join("");
+
+        note.textContent = "Episodes loaded. Use Watch to open a provider search page for this title.";
+      } catch (e) {
+        wrap.innerHTML = `
+          <div class="rowItem">
+            <div class="rowLeft">
+              <b>Could not load episodes</b>
+              <div class="small">Try again in a minute (Jikan rate limits sometimes).</div>
+            </div>
+          </div>
+        `;
+        note.textContent = "If this keeps happening, use the provider buttons or open MAL.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Load Episodes";
+      }
+    }
+
+    document.getElementById("loadEpisodesBtn").addEventListener("click", () => {
+      loadEpisodes();
+    });
+
+    // rating
     document.getElementById("saveRatingBtn").addEventListener("click", () => {
       const val = document.getElementById("ratingSelect").value;
       if (!val) return toast("Pick a rating first.");
@@ -427,6 +663,7 @@ $username = htmlspecialchars($_SESSION['username']);
       toast("Rating saved.");
     });
 
+    // comments
     document.getElementById("postCommentBtn").addEventListener("click", () => {
       const text = document.getElementById("commentText").value.trim();
       if (!text) return toast("Write a comment first.");
