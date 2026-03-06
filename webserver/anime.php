@@ -435,33 +435,24 @@ $username = htmlspecialchars($_SESSION['username']);
       localStorage.setItem(key, JSON.stringify(obj));
     }
 
-    function renderComments(animeId){
-      const wrap = document.getElementById("comments");
-      const all = loadJson(commentsKey());
-      const list = all[animeId] || [];
-
-      if (list.length === 0){
-        wrap.innerHTML = `<div class="muted" style="font-size:13px;">No comments yet.</div>`;
-        return;
-      }
-
-      wrap.innerHTML = list
-        .slice().reverse()
-        .map(c => `
-          <div class="comment">
-            <div class="commentTop">
-              <span><b>${escapeHtml(c.user)}</b></span>
-              <span>${escapeHtml(c.date)}</span>
-            </div>
-            <div>${escapeHtml(c.text)}</div>
-          </div>
-        `).join("");
-    }
-
-    const animeId = getId();
-    if (!animeId){
-      toast("Missing anime id.");
-    }
+    async function loadComments(){
+	const wrap = document.getElementById("comments");
+	wrap.innerHTML = '<div class="muted" style="font-size:13px;">Loading...</div>';
+	try {
+		const res = await fetch(`review_get.php?anime_id=${encodeURIComponent(animeId)}`);
+		const json = await res.json();
+		const list = json.reviews ?? [];
+		
+		if (list.length === 0){ wrap.innerHTML = '<div class ="muted" style="font-size:13px;">No comments yet.</div>'; return;}
+		wrap.innerHTML = list.map(c => `
+			<div class="comment">
+				<div class="commentTop"><span><b>${escapeHtml(c.username)}</b></span><span>${escapeHtml(c.created_at)}</span></div>
+				<div>${escapeHtml(c.review_text)}</div>
+			</div>`).join("");
+	}
+		catch(e) {
+			wrap.innerHTML = '<div class="muted" style="font-size:13px;">Could not load comments.</div';}
+}
 
     // Keep these available across functions
     let currentTitle = "";
@@ -651,36 +642,33 @@ $username = htmlspecialchars($_SESSION['username']);
     });
 
     // rating
-    document.getElementById("saveRatingBtn").addEventListener("click", () => {
-      const val = document.getElementById("ratingSelect").value;
-      if (!val) return toast("Pick a rating first.");
-
-      const ratings = loadJson(ratingsKey());
-      ratings[animeId] = Number(val);
-      saveJson(ratingsKey(), ratings);
-
-      document.getElementById("yourRating").textContent = `${val}/10`;
-      toast("Rating saved.");
-    });
+    document.getElementById("saveRatingsBtn").addEventListener("click", async () => {
+	const val = document.getElementById("ratingSelect").value;
+	if (!val) return toast("Pick a rating first.");
+	try {
+		await postForm("review_add.php", { anime_id: animeId, title: currentTitle, rating: val, review_text: ""});
+		document.getElementById("yourRating").textContent = `${val}/10`;
+		toast("Rating saved.");
+	}
+		catch(e) 
+		{
+			toast(e.message); }
+});
 
     // comments
-    document.getElementById("postCommentBtn").addEventListener("click", () => {
-      const text = document.getElementById("commentText").value.trim();
-      if (!text) return toast("Write a comment first.");
-
-      const all = loadJson(commentsKey());
-      if (!all[animeId]) all[animeId] = [];
-      all[animeId].push({
-        user: username,
-        text: text,
-        date: new Date().toLocaleString()
-      });
-      saveJson(commentsKey(), all);
-
-      document.getElementById("commentText").value = "";
-      renderComments(animeId);
-      toast("Comment posted.");
-    });
+    document.getElementById("postCommentBtn").addEventListener("click", async () => {
+	const text = document.getElementById("commentText").value.trim();
+	if (!text) return toast ("Write a comment first.");
+	try {
+		await postForm("review_add.php", { anime_id: animeId, title: currentTitle, rating: document.getElementById("ratingSelect").value || 0, review_text: text});
+		document.getElementById("commentText").value = "";
+		await loadComments();
+		toast("Comment posted.");
+	}	
+		catch(e)
+		{
+			toast(e.message);}
+});
 
     // Watchlist: add only (backend doesn't support remove yet)
     document.getElementById("watchlistBtn").addEventListener("click", async () => {

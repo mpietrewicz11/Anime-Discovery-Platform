@@ -41,11 +41,9 @@ function doLogin($username, $password)
 function doAddWatchlist($username, $animeId, $animeTitle)
 {
 	$db = new loginDB();
-	return $db->addToWatchlist($username, $animeId, $animeTitle);
-	if (!$result) {
-		return ['ok' => true, 'message' => 'Already in watchlist'];
-	}
-		return ['ok' => true, 'message' => 'Added  to watchlist'];
+	$db->addToWatchlist($username, $animeId, $animeTitle);
+	
+		return ['ok' => true];
 }
 
 function doGetWatchlist($username)
@@ -58,13 +56,15 @@ function doGetWatchlist($username)
 function doAddReview($username, $animeId, $animeTitle, $rating, $reviewText)
 {
 	$db = new loginDB();
-	return $db->addReview($username, $animeId, $animeTitle, $rating, $reviewText);
+	 $db->addReview($username, $animeId, $animeTitle, $rating, $reviewText);
+	return ['ok' => true];
 }
 	
 function doGetReviews($animeId)
 {
 	$db = new loginDB();
-	return $db->getReviews($animeId);
+	$list = $db->getReviews($animeId);
+	return ['ok' => true, 'reviews' => $list];
 } 
 
 function doGetAnimeList($genre)
