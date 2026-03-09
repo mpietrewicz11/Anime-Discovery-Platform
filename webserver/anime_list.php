@@ -1,4 +1,4 @@
-  GNU nano 6.2                webserver/review_add.php                          
+
 <?php
 session_start();
 header("Content-Type: application/json");
