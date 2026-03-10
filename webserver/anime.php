@@ -536,7 +536,7 @@ $username = htmlspecialchars($_SESSION['username']);
         // backend might be down; ignore
       }
 
-      awaitloadComments();
+      await loadComments();
     }
 
     // Episodes
