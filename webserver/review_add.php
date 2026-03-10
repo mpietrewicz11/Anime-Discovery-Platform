@@ -13,6 +13,6 @@ $response = $client->send_request([
 	"anime_id" => (int)($_POST["anime_id"] ?? 0),
 	"anime_title" => trim($_POST["title"] ?? ""),
 	"rating" => (int)($_POST["rating"] ?? 0),
-	"review_text" => trim($_POST)["review_text"] ?? "")]);
+	"review_text" => trim($_POST["review_text"] ?? "")]);
 
 echo json_encode($response ?? ["ok" => false]);
