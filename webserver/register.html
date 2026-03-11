@@ -54,6 +54,7 @@
       background: rgba(0,0,0,0.25);
       color: #e9ecff;
       outline:none;
+      box-sizing: border-box;
     }
 
     input:focus{
@@ -63,7 +64,7 @@
     .row{
       display:flex;
       gap:10px;
-      align-items:center;
+      align-items:flex-start;
       margin-top: 10px;
       font-size: 13px;
       color: rgba(233,236,255,0.75);
@@ -71,7 +72,7 @@
 
     .row input{
       width:auto;
-      margin:0;
+      margin:2px 0 0 0;
     }
 
     .msg{
@@ -122,7 +123,7 @@
 <body>
   <div class="card">
     <h1>Register</h1>
-    <p class="sub">Create an account so you can rate, comment, and save anime to your watchlist.</p>
+    <p class="sub">Create an account so you can rate, comment, save anime to your watchlist, and get email alerts for new episodes.</p>
 
     <div id="msg" class="msg"></div>
 
@@ -130,11 +131,19 @@
       <label for="username">Username</label>
       <input id="username" type="text" name="username" autocomplete="username" required />
 
+      <label for="email">Email</label>
+      <input id="email" type="email" name="email" autocomplete="email" required />
+
       <label for="password">Password</label>
       <input id="password" type="password" name="password" autocomplete="new-password" required />
 
       <label for="confirm">Confirm password</label>
       <input id="confirm" type="password" autocomplete="new-password" required />
+
+      <div class="row">
+        <input id="email_notifications" type="checkbox" name="email_notifications" value="1" checked />
+        <span>Notify me when my favorite anime releases a new episode</span>
+      </div>
 
       <div class="row">
         <input id="showPass" type="checkbox" />
@@ -150,7 +159,6 @@
   </div>
 
   <script>
-    // Show serverside messages based on URL parameters
     const params = new URLSearchParams(window.location.search);
     const msgBox = document.getElementById("msg");
 
@@ -163,21 +171,30 @@
       showMsg("All fields are required.");
     }
 
+    if (params.get("error") === "invalid_email") {
+      showMsg("Please enter a valid email address.");
+    }
+
     if (params.get("error") === "register_failed") {
       showMsg("Registration failed. Username may already exist.");
     }
 
-    // Show/hide password
     document.getElementById("showPass").addEventListener("change", (e) => {
       const type = e.target.checked ? "text" : "password";
       document.getElementById("password").type = type;
       document.getElementById("confirm").type = type;
     });
 
-    // Client-side check before submitting to PHP
     document.getElementById("registerForm").addEventListener("submit", (e) => {
+      const email = document.getElementById("email").value.trim();
       const p1 = document.getElementById("password").value.trim();
       const p2 = document.getElementById("confirm").value.trim();
+
+      if (!email) {
+        e.preventDefault();
+        showMsg("Email is required.");
+        return;
+      }
 
       if (p1.length < 4) {
         e.preventDefault();

@@ -327,6 +327,7 @@ $username = htmlspecialchars($_SESSION['username']);
         <img id="poster" class="poster" alt="Poster" />
         <div class="btnRow">
           <button id="watchlistBtn" class="btn primary">Add to Watchlist</button>
+          <button id="notifyBtn" class="btn">Notify Me</button>
           <a id="jikanLink" class="btn" target="_blank" rel="noreferrer">Open on MAL</a>
         </div>
         <div class="muted" style="margin-top:10px;font-size:13px">
@@ -487,6 +488,29 @@ $username = htmlspecialchars($_SESSION['username']);
       }
     }
 
+    async function loadNotificationStatus(){
+      const btn = document.getElementById("notifyBtn");
+      if (!btn) return;
+
+      try {
+        const res = await fetch("notification_get.php");
+        const data = await res.json();
+
+        if (data.ok === true && Array.isArray(data.data)) {
+          const item = data.data.find(n => String(n.anime_id) === String(animeId) && String(n.enabled) === "1");
+          if (item) {
+            btn.textContent = "Notifications On ✓";
+            btn.classList.add("ok");
+          } else {
+            btn.textContent = "Notify Me";
+            btn.classList.remove("ok");
+          }
+        }
+      } catch (e) {
+        console.error("Could not load notification status:", e);
+      }
+    }
+
     async function loadUserRating(){
       try {
         const res = await fetch(`review_get.php?anime_id=${encodeURIComponent(animeId)}`);
@@ -586,6 +610,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
       await loadComments();
       await loadUserRating();
+      await loadNotificationStatus();
     }
 
     function episodeRowHTML(epNum, epTitle){
@@ -734,6 +759,31 @@ $username = htmlspecialchars($_SESSION['username']);
         btn.textContent = "In Watchlist ✓";
         btn.classList.add("ok");
         toast("Added to watchlist.");
+      } catch (e) {
+        toast(e.message);
+      }
+    });
+
+    document.getElementById("notifyBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("notifyBtn");
+      const enabled = btn.classList.contains("ok") ? 0 : 1;
+
+      try {
+        await postForm("notification_toggle.php", {
+          anime_id: animeId,
+          title: currentTitle,
+          enabled: enabled
+        });
+
+        if (enabled === 1) {
+          btn.textContent = "Notifications On ✓";
+          btn.classList.add("ok");
+          toast("Episode notifications enabled.");
+        } else {
+          btn.textContent = "Notify Me";
+          btn.classList.remove("ok");
+          toast("Episode notifications turned off.");
+        }
       } catch (e) {
         toast(e.message);
       }
