@@ -47,16 +47,26 @@ $username = htmlspecialchars($_SESSION['username']);
       border-bottom:1px solid var(--border);
     }
 
-    .brand{ font-weight: 800; letter-spacing: .3px; }
+    .brand{
+      font-weight: 800;
+      letter-spacing: .3px;
+    }
 
-    .nav-links{ display:flex; gap:14px; align-items:center; }
+    .nav-links{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
 
     .nav-links a{
       color: var(--text);
       text-decoration:none;
       font-size: 14px;
     }
-    .nav-links a:hover{ color: var(--accent); }
+
+    .nav-links a:hover{
+      color: var(--accent);
+    }
 
     .container{
       width: min(1100px, 92vw);
@@ -72,7 +82,9 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     @media (max-width: 760px){
-      .grid{ grid-template-columns: 1fr; }
+      .grid{
+        grid-template-columns: 1fr;
+      }
     }
 
     .card{
@@ -91,7 +103,11 @@ $username = htmlspecialchars($_SESSION['username']);
       background: rgba(0,0,0,0.2);
     }
 
-    h1{ margin: 0 0 6px; font-size: 26px; line-height: 1.2; }
+    h1{
+      margin: 0 0 6px;
+      font-size: 26px;
+      line-height: 1.2;
+    }
 
     .meta{
       display:flex;
@@ -114,9 +130,16 @@ $username = htmlspecialchars($_SESSION['username']);
       white-space: nowrap;
     }
 
-    .muted{ color: var(--muted); }
+    .muted{
+      color: var(--muted);
+    }
 
-    .btnRow{ display:flex; gap:10px; flex-wrap: wrap; margin-top: 10px; }
+    .btnRow{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
 
     .btn{
       border:1px solid rgba(255,255,255,0.14);
@@ -132,7 +155,10 @@ $username = htmlspecialchars($_SESSION['username']);
       justify-content:center;
       gap:8px;
     }
-    .btn:hover{ background: rgba(255,255,255,0.10); }
+
+    .btn:hover{
+      background: rgba(255,255,255,0.10);
+    }
 
     .btn.primary{
       border-color: transparent;
@@ -203,9 +229,11 @@ $username = htmlspecialchars($_SESSION['username']);
       display:none;
       max-width: 92vw;
     }
-    .toast.show{ display:block; }
 
-    /* Episodes + watch options */
+    .toast.show{
+      display:block;
+    }
+
     .sectionTitle{
       margin: 0 0 8px;
       font-size: 15px;
@@ -227,14 +255,19 @@ $username = htmlspecialchars($_SESSION['username']);
       padding: 10px 12px;
       border-top: 1px solid rgba(255,255,255,0.08);
     }
-    .rowItem:first-child{ border-top: none; }
+
+    .rowItem:first-child{
+      border-top: none;
+    }
 
     .rowLeft{
       min-width: 0;
     }
+
     .rowLeft b{
       font-size: 13px;
     }
+
     .rowLeft .small{
       font-size: 12px;
       color: var(--muted);
@@ -256,7 +289,10 @@ $username = htmlspecialchars($_SESSION['username']);
       text-decoration:none;
       white-space: nowrap;
     }
-    .miniBtn:hover{ background: rgba(255,255,255,0.10); }
+
+    .miniBtn:hover{
+      background: rgba(255,255,255,0.10);
+    }
 
     .miniBtn.primary{
       background: var(--accent);
@@ -299,7 +335,6 @@ $username = htmlspecialchars($_SESSION['username']);
 
         <div style="height:14px"></div>
 
-        <!-- Watch options -->
         <div class="card" style="padding:14px;">
           <div class="sectionTitle">Where to watch</div>
           <div class="btnRow" style="margin-top:8px;">
@@ -324,7 +359,6 @@ $username = htmlspecialchars($_SESSION['username']);
 
         <div style="height:14px"></div>
 
-        <!-- Episodes -->
         <div class="card" style="padding:14px;">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
             <div class="sectionTitle" style="margin:0;">Episodes</div>
@@ -335,7 +369,7 @@ $username = htmlspecialchars($_SESSION['username']);
           </div>
 
           <div id="episodesNote" class="note">
-            Click “Load Episodes” to see the list. Then use “Watch” to open a provider search for that title.
+            Click "Load Episodes" to see the list. Then use "Watch" to open a provider search for that title.
           </div>
 
           <div style="height:10px"></div>
@@ -344,7 +378,6 @@ $username = htmlspecialchars($_SESSION['username']);
 
         <div style="height:14px"></div>
 
-        <!-- Ratings + comments -->
         <div class="card" style="padding:14px;">
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
             <div>
@@ -392,6 +425,8 @@ $username = htmlspecialchars($_SESSION['username']);
       return p.get("id");
     }
 
+    const animeId = getId();
+
     function escapeHtml(str){
       return String(str)
         .replaceAll("&","&amp;")
@@ -424,45 +459,60 @@ $username = htmlspecialchars($_SESSION['username']);
       return json;
     }
 
-    function ratingsKey(){ return "ratings_" + username; }
-    function commentsKey(){ return "comments_" + username; }
+    function ratingsKey(){
+      return "ratings_" + username;
+    }
+
+    function commentsKey(){
+      return "comments_" + username;
+    }
 
     function loadJson(key){
-      try { return JSON.parse(localStorage.getItem(key)) || {}; }
-      catch { return {}; }
+      try {
+        return JSON.parse(localStorage.getItem(key)) || {};
+      } catch {
+        return {};
+      }
     }
+
     function saveJson(key, obj){
       localStorage.setItem(key, JSON.stringify(obj));
     }
 
     async function loadComments(){
-	const wrap = document.getElementById("comments");
-	wrap.innerHTML = '<div class="muted" style="font-size:13px;">Loading...</div>';
-	try {
-		const res = await fetch(`review_get.php?anime_id=${encodeURIComponent(animeId)}`);
-		const json = await res.json();
-		const list = json.reviews ?? [];
-		
-		if (list.length === 0){ wrap.innerHTML = '<div class ="muted" style="font-size:13px;">No comments yet.</div>'; return;}
-		wrap.innerHTML = list.map(c => `
-			<div class="comment">
-				<div class="commentTop"><span><b>${escapeHtml(c.username)}</b></span><span>${escapeHtml(c.created_at)}</span></div>
-				<div>${escapeHtml(c.review_text)}</div>
-			</div>`).join("");
-	}
-		catch(e) {
-			wrap.innerHTML = '<div class="muted" style="font-size:13px;">Could not load comments.</div';}
-}
+      const wrap = document.getElementById("comments");
+      wrap.innerHTML = '<div class="muted" style="font-size:13px;">Loading...</div>';
 
-    // Keep these available across functions
+      try {
+        const res = await fetch(`review_get.php?anime_id=${encodeURIComponent(animeId)}`);
+        const json = await res.json();
+        const list = json.reviews ?? [];
+
+        if (list.length === 0) {
+          wrap.innerHTML = '<div class="muted" style="font-size:13px;">No comments yet.</div>';
+          return;
+        }
+
+        wrap.innerHTML = list.map(c => `
+          <div class="comment">
+            <div class="commentTop">
+              <span><b>${escapeHtml(c.username)}</b></span>
+              <span>${escapeHtml(c.created_at)}</span>
+            </div>
+            <div>${escapeHtml(c.review_text)}</div>
+          </div>
+        `).join("");
+      } catch (e) {
+        wrap.innerHTML = '<div class="muted" style="font-size:13px;">Could not load comments.</div>';
+      }
+    }
+
     let currentTitle = "";
     let malUrl = "";
 
     function setProviderLinks(title){
-      // Simple provider search links (legal / safe)
-      const q = encodeURIComponent(title);
+      const q = encodeURIComponent(title || "anime");
 
-      // These are search pages; availability depends on user region/account.
       document.getElementById("watchCrunchyroll").href = "https://www.crunchyroll.com/search?q=" + q;
       document.getElementById("watchNetflix").href = "https://www.netflix.com/search?q=" + q;
       document.getElementById("watchHulu").href = "https://www.hulu.com/search?q=" + q;
@@ -475,7 +525,6 @@ $username = htmlspecialchars($_SESSION['username']);
 
       const ep = document.getElementById("episodesOnMAL");
       ep.href = url ? (url.replace("/anime/", "/anime/") + "/episode") : "#";
-      // MAL episode URL format isn't always perfect; keep it as a convenience link
       if (!url) ep.style.display = "none";
     }
 
@@ -516,7 +565,6 @@ $username = htmlspecialchars($_SESSION['username']);
       document.getElementById("yourRating").textContent = saved ? `${saved}/10` : "—";
       document.getElementById("ratingSelect").value = saved ? String(saved) : "";
 
-      // Watchlist button state (read from backend)
       const wlBtn = document.getElementById("watchlistBtn");
       wlBtn.textContent = "Add to Watchlist";
       wlBtn.classList.remove("ok");
@@ -533,13 +581,12 @@ $username = htmlspecialchars($_SESSION['username']);
           }
         }
       } catch (e) {
-        // backend might be down; ignore
+        // ignore
       }
 
-      awaitloadComments();
+      await loadComments();
     }
 
-    // Episodes
     function episodeRowHTML(epNum, epTitle){
       const safeTitle = currentTitle ? currentTitle : "anime";
       const q = encodeURIComponent(safeTitle);
@@ -573,12 +620,9 @@ $username = htmlspecialchars($_SESSION['username']);
       wrap.innerHTML = `<div class="rowItem"><div class="rowLeft"><b>Loading episodes...</b></div></div>`;
 
       try {
-        // Jikan episodes are paginated
         let page = 1;
         let hasNext = true;
         let all = [];
-
-        // Limit pages to avoid rate-limit and huge shows
         const MAX_PAGES = 6;
 
         while (hasNext && page <= MAX_PAGES) {
@@ -589,7 +633,6 @@ $username = htmlspecialchars($_SESSION['username']);
           hasNext = Boolean(json.pagination && json.pagination.has_next_page);
           page += 1;
 
-          // small delay to be nice to Jikan
           await new Promise(r => setTimeout(r, 250));
         }
 
@@ -598,24 +641,16 @@ $username = htmlspecialchars($_SESSION['username']);
             <div class="rowItem">
               <div class="rowLeft">
                 <b>No episodes found</b>
-                <div class="small">Some shows don’t have episode data available in Jikan.</div>
+                <div class="small">Some shows do not have episode data available in Jikan.</div>
               </div>
             </div>
           `;
-          note.textContent = "If episodes don't load, use the watch buttons above or open MAL.";
+          note.textContent = "If episodes do not load, use the watch buttons above or open MAL.";
           return;
         }
 
-        // Render episodes
         wrap.innerHTML = all.map(ep => {
-          const num = ep.mal_id ? ep.mal_id : (ep.episode_id || ep.episode || "?");
-          const epNum = ep.mal_id ? ep.mal_id : (ep.mal_id || ep.episode_id || ep.episode || "?");
-          const number = ep.mal_id ? ep.mal_id : (ep.mal_id || ep.episode_id || ep.episode || "?");
-
-          const n = ep.mal_id ? ep.mal_id : (ep.mal_id || ep.episode_id || ep.episode || "?");
-          const displayNum = ep.mal_id ? ep.mal_id : (ep.episode_id || ep.episode || ep.mal_id || "?");
-
-          // Jikan episode object typically has: mal_id (episode number), title, title_romanji, title_japanese
+          const displayNum = ep.mal_id || ep.episode_id || ep.episode || "?";
           const title = ep.title || ep.title_romanji || ep.title_japanese || "";
           return episodeRowHTML(displayNum, title);
         }).join("");
@@ -641,36 +676,45 @@ $username = htmlspecialchars($_SESSION['username']);
       loadEpisodes();
     });
 
-    // rating
-    document.getElementById("saveRatingsBtn").addEventListener("click", async () => {
-	const val = document.getElementById("ratingSelect").value;
-	if (!val) return toast("Pick a rating first.");
-	try {
-		await postForm("review_add.php", { anime_id: animeId, title: currentTitle, rating: val, review_text: ""});
-		document.getElementById("yourRating").textContent = `${val}/10`;
-		toast("Rating saved.");
-	}
-		catch(e) 
-		{
-			toast(e.message); }
-});
+    document.getElementById("saveRatingBtn").addEventListener("click", async () => {
+      const val = document.getElementById("ratingSelect").value;
+      if (!val) return toast("Pick a rating first.");
 
-    // comments
+      try {
+        await postForm("review_add.php", {
+          anime_id: animeId,
+          title: currentTitle,
+          rating: val,
+          review_text: ""
+        });
+
+        document.getElementById("yourRating").textContent = `${val}/10`;
+        toast("Rating saved.");
+      } catch (e) {
+        toast(e.message);
+      }
+    });
+
     document.getElementById("postCommentBtn").addEventListener("click", async () => {
-	const text = document.getElementById("commentText").value.trim();
-	if (!text) return toast ("Write a comment first.");
-	try {
-		await postForm("review_add.php", { anime_id: animeId, title: currentTitle, rating: document.getElementById("ratingSelect").value || 0, review_text: text});
-		document.getElementById("commentText").value = "";
-		await loadComments();
-		toast("Comment posted.");
-	}	
-		catch(e)
-		{
-			toast(e.message);}
-});
+      const text = document.getElementById("commentText").value.trim();
+      if (!text) return toast("Write a comment first.");
 
-    // Watchlist: add only (backend doesn't support remove yet)
+      try {
+        await postForm("review_add.php", {
+          anime_id: animeId,
+          title: currentTitle,
+          rating: document.getElementById("ratingSelect").value || 0,
+          review_text: text
+        });
+
+        document.getElementById("commentText").value = "";
+        await loadComments();
+        toast("Comment posted.");
+      } catch (e) {
+        toast(e.message);
+      }
+    });
+
     document.getElementById("watchlistBtn").addEventListener("click", async () => {
       const btn = document.getElementById("watchlistBtn");
 
@@ -693,10 +737,15 @@ $username = htmlspecialchars($_SESSION['username']);
       }
     });
 
-    loadAnime().catch(() => {
-      document.getElementById("title").textContent = "Could not load anime details.";
-      toast("Could not load anime details.");
-    });
+    if (!animeId) {
+      document.getElementById("title").textContent = "Missing anime id.";
+      toast("Missing anime id.");
+    } else {
+      loadAnime().catch(() => {
+        document.getElementById("title").textContent = "Could not load anime details.";
+        toast("Could not load anime details.");
+      });
+    }
   </script>
 </body>
 </html>
