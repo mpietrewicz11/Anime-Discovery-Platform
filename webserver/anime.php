@@ -637,12 +637,13 @@ $username = htmlspecialchars($_SESSION['username']);
       }
     }
 
-    document.getElementById("loadEpisodesBtn").addEventListener("click", () => {
+    const loadEpisodesBtn = document.getElementById("loadEpisodesBtn");
+	if (loadEpisodesBtn) loadEpisodesBtn.addEventListener("click", () => {
       loadEpisodes();
     });
 
     // rating
-    document.getElementById("saveRatingsBtn").addEventListener("click", async () => {
+    document.getElementById("saveRatingBtn").addEventListener("click", async () => {
 	const val = document.getElementById("ratingSelect").value;
 	if (!val) return toast("Pick a rating first.");
 	try {
