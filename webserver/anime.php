@@ -560,10 +560,17 @@ $username = htmlspecialchars($_SESSION['username']);
       setMALLinks(malUrl);
       setProviderLinks(currentTitle);
 
-      const ratings = loadJson(ratingsKey());
-      const saved = ratings[animeId];
-      document.getElementById("yourRating").textContent = saved ? `${saved}/10` : "—";
-      document.getElementById("ratingSelect").value = saved ? String(saved) : "";
+      try {
+		const rRes = await fetch('review_get.php?anime_id=${encodeURIComponent(animeId)}');
+		const rJson = await rRes.json();
+		const myReview = (rJson.reviews ?? []).find(r => r.username === username);
+		
+	if (myReview) {
+		document.getElementById("yourRating").textContent = `${myReview.score}/10`;
+		document.getElementById("ratingSelect").value = String(myReview.score);
+	}
+}
+	catch(e) {}
 
       const wlBtn = document.getElementById("watchlistBtn");
       wlBtn.textContent = "Add to Watchlist";
