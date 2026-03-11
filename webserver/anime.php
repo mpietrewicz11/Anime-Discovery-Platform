@@ -459,26 +459,6 @@ $username = htmlspecialchars($_SESSION['username']);
       return json;
     }
 
-    function ratingsKey(){
-      return "ratings_" + username;
-    }
-
-    function commentsKey(){
-      return "comments_" + username;
-    }
-
-    function loadJson(key){
-      try {
-        return JSON.parse(localStorage.getItem(key)) || {};
-      } catch {
-        return {};
-      }
-    }
-
-    function saveJson(key, obj){
-      localStorage.setItem(key, JSON.stringify(obj));
-    }
-
     async function loadComments(){
       const wrap = document.getElementById("comments");
       wrap.innerHTML = '<div class="muted" style="font-size:13px;">Loading...</div>';
@@ -507,12 +487,37 @@ $username = htmlspecialchars($_SESSION['username']);
       }
     }
 
+    async function loadUserRating(){
+      try {
+        const res = await fetch(`review_get.php?anime_id=${encodeURIComponent(animeId)}`);
+        const json = await res.json();
+
+        if (!json.ok) return;
+
+        if (json.data && json.data.rating) {
+          document.getElementById("ratingSelect").value = String(json.data.rating);
+          document.getElementById("yourRating").textContent = `${json.data.rating}/10`;
+          return;
+        }
+
+        if (Array.isArray(json.reviews) && json.reviews.length > 0) {
+          const myReview = json.reviews.find(r => r.username === username);
+          if (myReview && (myReview.score || myReview.rating)) {
+            const savedRating = myReview.score || myReview.rating;
+            document.getElementById("ratingSelect").value = String(savedRating);
+            document.getElementById("yourRating").textContent = `${savedRating}/10`;
+          }
+        }
+      } catch (e) {
+        console.error("Could not load rating:", e);
+      }
+    }
+
     let currentTitle = "";
     let malUrl = "";
 
     function setProviderLinks(title){
       const q = encodeURIComponent(title || "anime");
-
       document.getElementById("watchCrunchyroll").href = "https://www.crunchyroll.com/search?q=" + q;
       document.getElementById("watchNetflix").href = "https://www.netflix.com/search?q=" + q;
       document.getElementById("watchHulu").href = "https://www.hulu.com/search?q=" + q;
@@ -560,18 +565,6 @@ $username = htmlspecialchars($_SESSION['username']);
       setMALLinks(malUrl);
       setProviderLinks(currentTitle);
 
-      try {
-		const rRes = await fetch('review_get.php?anime_id=${encodeURIComponent(animeId)}');
-		const rJson = await rRes.json();
-		const myReview = (rJson.reviews ?? []).find(r => r.username === username);
-		
-	if (myReview) {
-		document.getElementById("yourRating").textContent = `${myReview.score}/10`;
-		document.getElementById("ratingSelect").value = String(myReview.score);
-	}
-}
-	catch(e) {}
-
       const wlBtn = document.getElementById("watchlistBtn");
       wlBtn.textContent = "Add to Watchlist";
       wlBtn.classList.remove("ok");
@@ -592,6 +585,7 @@ $username = htmlspecialchars($_SESSION['username']);
       }
 
       await loadComments();
+      await loadUserRating();
     }
 
     function episodeRowHTML(epNum, epTitle){
@@ -716,6 +710,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
         document.getElementById("commentText").value = "";
         await loadComments();
+        await loadUserRating();
         toast("Comment posted.");
       } catch (e) {
         toast(e.message);
