@@ -13,7 +13,7 @@ $password = trim($_POST['password'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $emailNotifications = isset($_POST['email_notifications']) ? 1 : 0;
 
-if ($username === ''  $password === ''  $email === '') {
+if ($username === '' || $password === '' || $email === '') {
     header("Location: register.html?error=fields_required");
     exit;
 }
