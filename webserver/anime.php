@@ -389,7 +389,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
     function getId(){
       const p = new URLSearchParams(window.location.search);
-	const animeId = p.get("id");
+      return p.get("id");
     }
 
     function escapeHtml(str){
@@ -536,7 +536,7 @@ $username = htmlspecialchars($_SESSION['username']);
         // backend might be down; ignore
       }
 
-      await loadComments();
+      awaitloadComments();
     }
 
     // Episodes
@@ -637,13 +637,12 @@ $username = htmlspecialchars($_SESSION['username']);
       }
     }
 
-    const loadEpisodesBtn = document.getElementById("loadEpisodesBtn");
-	if (loadEpisodesBtn) loadEpisodesBtn.addEventListener("click", () => {
+    document.getElementById("loadEpisodesBtn").addEventListener("click", () => {
       loadEpisodes();
     });
 
     // rating
-    document.getElementById("saveRatingBtn").addEventListener("click", async () => {
+    document.getElementById("saveRatingsBtn").addEventListener("click", async () => {
 	const val = document.getElementById("ratingSelect").value;
 	if (!val) return toast("Pick a rating first.");
 	try {
