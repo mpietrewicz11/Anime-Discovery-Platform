@@ -61,7 +61,10 @@ $username = htmlspecialchars($_SESSION['username']);
       text-decoration:none;
       font-size: 14px;
     }
-    .nav-links a:hover{ color: var(--accent); }
+
+    .nav-links a:hover{
+      color: var(--accent);
+    }
 
     .container{
       width: min(1100px, 92vw);
@@ -102,6 +105,7 @@ $username = htmlspecialchars($_SESSION['username']);
       color: var(--text);
       outline:none;
     }
+
     .search input:focus{
       border-color: rgba(124,92,255,0.7);
     }
@@ -134,7 +138,11 @@ $username = htmlspecialchars($_SESSION['username']);
       padding-bottom: 8px;
       scroll-behavior: smooth;
     }
-    .row::-webkit-scrollbar{ height: 8px; }
+
+    .row::-webkit-scrollbar{
+      height: 8px;
+    }
+
     .row::-webkit-scrollbar-thumb{
       background: rgba(255,255,255,0.18);
       border-radius: 999px;
@@ -148,7 +156,10 @@ $username = htmlspecialchars($_SESSION['username']);
       padding: 10px;
       transition: transform .12s ease;
     }
-    .card:hover{ transform: translateY(-2px); }
+
+    .card:hover{
+      transform: translateY(-2px);
+    }
 
     .poster{
       width:100%;
@@ -200,7 +211,10 @@ $username = htmlspecialchars($_SESSION['username']);
       cursor:pointer;
       font-size: 13px;
     }
-    .btn:hover{ background: rgba(255,255,255,0.10); }
+
+    .btn:hover{
+      background: rgba(255,255,255,0.10);
+    }
 
     .btn.primary{
       border-color: transparent;
@@ -223,8 +237,14 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     @media (max-width: 520px){
-      .topline{ flex-direction: column; align-items: stretch; }
-      .card{ flex-basis: 150px; }
+      .topline{
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .card{
+        flex-basis: 150px;
+      }
     }
   </style>
 </head>
@@ -266,25 +286,25 @@ $username = htmlspecialchars($_SESSION['username']);
   </div>
 
   <script>
-    // JIKAN SETUP (kept for now for genres/search + fallback)
     const JIKAN_BASE = "https://api.jikan.moe/v4";
     const SFW = true;
     const LIMIT = 12;
     const TASTE_KEY = "taste_genres_v1";
 
     const ROW_CONFIG = [
-      { key: "top",       title: "Top Anime", type: "top" }, // <-- this one will try RabbitMQ endpoint first
-      { key: "shounen",   title: "Shonen Picks", type: "demographic", name: "Shounen" },
-      { key: "romance",   title: "Romance", type: "genre", name: "Romance" },
-      { key: "comedy",    title: "Comedy", type: "genre", name: "Comedy" },
-      { key: "mystery",   title: "Mystery", type: "genre", name: "Mystery" },
-      { key: "sports",    title: "Sports", type: "genre", name: "Sports" },
-      { key: "fantasy",   title: "Fantasy", type: "genre", name: "Fantasy" },
+      { key: "top", title: "Top Anime", type: "top" },
+      { key: "shounen", title: "Shonen Picks", type: "demographic", name: "Shounen" },
+      { key: "romance", title: "Romance", type: "genre", name: "Romance" },
+      { key: "comedy", title: "Comedy", type: "genre", name: "Comedy" },
+      { key: "mystery", title: "Mystery", type: "genre", name: "Mystery" },
+      { key: "sports", title: "Sports", type: "genre", name: "Sports" },
+      { key: "fantasy", title: "Fantasy", type: "genre", name: "Fantasy" },
     ];
 
-    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+    function sleep(ms){
+      return new Promise(r => setTimeout(r, ms));
+    }
 
-    // Small fetch helper with timeout so it doesn't "spin forever"
     async function fetchJson(url, opts = {}, timeoutMs = 8000){
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -300,8 +320,11 @@ $username = htmlspecialchars($_SESSION['username']);
 
     async function jikanGet(path, params = {}) {
       const url = new URL(JIKAN_BASE + path);
+
       Object.entries(params).forEach(([k,v]) => {
-        if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
+        if (v !== undefined && v !== null && v !== "") {
+          url.searchParams.set(k, v);
+        }
       });
 
       const res = await fetch(url.toString());
@@ -322,8 +345,6 @@ $username = htmlspecialchars($_SESSION['username']);
       };
     }
 
-    // Convert DB row: same shape as normalizeAnime()
-    // Expected backend response rows like: {mal_id, title, score, episodes, poster, year}
     function normalizeFromDbRow(r){
       return {
         id: r.mal_id ?? r.id ?? r.anime_id,
@@ -334,12 +355,17 @@ $username = htmlspecialchars($_SESSION['username']);
       };
     }
 
-    // (simple recommendation)
     function getTaste(){
-      try { return JSON.parse(localStorage.getItem(TASTE_KEY)) || {}; }
-      catch { return {}; }
+      try {
+        return JSON.parse(localStorage.getItem(TASTE_KEY)) || {};
+      } catch {
+        return {};
+      }
     }
-    function saveTaste(t){ localStorage.setItem(TASTE_KEY, JSON.stringify(t)); }
+
+    function saveTaste(t){
+      localStorage.setItem(TASTE_KEY, JSON.stringify(t));
+    }
 
     function bumpTaste(tag){
       const t = getTaste();
@@ -350,12 +376,11 @@ $username = htmlspecialchars($_SESSION['username']);
     function topTasteTags(limit = 2){
       const t = getTaste();
       return Object.entries(t)
-        .sort((a,b) => b[1]-a[1])
+        .sort((a,b) => b[1] - a[1])
         .slice(0, limit)
         .map(([k]) => k);
     }
 
-    // UI BUILDERS
     const sectionsEl = document.getElementById("sections");
 
     function sectionHTML(key, title){
@@ -410,11 +435,12 @@ $username = htmlspecialchars($_SESSION['username']);
         .replaceAll("'","&#039;");
     }
 
-    // GENRE ID LOOKUP
     async function getGenreIdByName(name){
       const cacheKey = "jikan_genres_cache_v1";
       let cache = {};
-      try { cache = JSON.parse(sessionStorage.getItem(cacheKey)) || {}; } catch {}
+      try {
+        cache = JSON.parse(sessionStorage.getItem(cacheKey)) || {};
+      } catch {}
 
       if (cache[name]) return cache[name];
 
@@ -430,7 +456,9 @@ $username = htmlspecialchars($_SESSION['username']);
     async function getDemographicIdByName(name){
       const cacheKey = "jikan_demo_cache_v1";
       let cache = {};
-      try { cache = JSON.parse(sessionStorage.getItem(cacheKey)) || {}; } catch {}
+      try {
+        cache = JSON.parse(sessionStorage.getItem(cacheKey)) || {};
+      } catch {}
 
       if (cache[name]) return cache[name];
 
@@ -443,21 +471,16 @@ $username = htmlspecialchars($_SESSION['username']);
       return id;
     }
 
-    // LOADERS FOR EACH ROW
-
-    //  UPDATED: Top row tries backend endpoint first (RabbitMQ path)
-    async function loadTopRow(key){
-      // 1) Try backend endpoint (webserver -> RabbitMQ -> backend -> DB)
+    async function loadTopRow(){
       try{
         const { res, json } = await fetchJson("get_top_anime.php?limit=" + encodeURIComponent(LIMIT), {}, 8000);
         if (res.ok && json && json.ok === true && Array.isArray(json.data)) {
           return json.data.map(normalizeFromDbRow).filter(x => x.id);
         }
       } catch(e){
-        // ignore and fallback
+        console.error("Top anime backend fetch failed:", e);
       }
 
-      // 2) Fallback to Jikan if backend/RabbitMQ is down
       const j = await jikanGet("/top/anime", { limit: LIMIT, sfw: SFW });
       return (j.data || []).map(normalizeAnime);
     }
@@ -465,6 +488,7 @@ $username = htmlspecialchars($_SESSION['username']);
     async function loadGenreRow(key, genreName){
       const genreId = await getGenreIdByName(genreName);
       if (!genreId) return [];
+
       const json = await jikanGet("/anime", {
         genres: genreId,
         order_by: "score",
@@ -472,12 +496,14 @@ $username = htmlspecialchars($_SESSION['username']);
         limit: LIMIT,
         sfw: SFW
       });
+
       return (json.data || []).map(normalizeAnime);
     }
 
     async function loadDemographicRow(key, demoName){
       const demoId = await getDemographicIdByName(demoName);
       if (!demoId) return [];
+
       const json = await jikanGet("/anime", {
         demographics: demoId,
         order_by: "score",
@@ -485,10 +511,10 @@ $username = htmlspecialchars($_SESSION['username']);
         limit: LIMIT,
         sfw: SFW
       });
+
       return (json.data || []).map(normalizeAnime);
     }
 
-    // RECOMMENDED ROW
     async function buildRecommended(){
       const recRow = document.getElementById("recommendedRow");
       const empty = document.getElementById("recommendedEmpty");
@@ -496,11 +522,23 @@ $username = htmlspecialchars($_SESSION['username']);
 
       const prefs = topTasteTags(2);
 
+      // If no user taste exists yet, show fallback recommendations
       if (prefs.length === 0) {
-        recRow.innerHTML = "";
-        empty.style.display = "block";
-        hint.textContent = "Based on what you click";
-        return;
+        hint.textContent = "Popular picks to get you started";
+
+        try {
+          const fallback = await loadTopRow();
+          recRow.innerHTML = "";
+          empty.style.display = "none";
+          renderRow(recRow, fallback.slice(0, LIMIT), "Top");
+          return;
+        } catch (e) {
+          console.error("Fallback recommendations failed:", e);
+          recRow.innerHTML = "";
+          empty.textContent = "Could not load recommendations right now.";
+          empty.style.display = "block";
+          return;
+        }
       }
 
       empty.style.display = "none";
@@ -511,26 +549,44 @@ $username = htmlspecialchars($_SESSION['username']);
       for (const tag of prefs) {
         try {
           let list = [];
-          if (tag.toLowerCase() === "shounen") {
+
+          if (tag.toLowerCase() === "shounen" || tag.toLowerCase() === "shonen picks") {
             list = await loadDemographicRow("rec", "Shounen");
+          } else if (tag.toLowerCase() === "top") {
+            list = await loadTopRow();
           } else {
             list = await loadGenreRow("rec", tag);
           }
+
           combined = combined.concat(list);
-          await sleep(350);
-        } catch(e) {}
+          await sleep(500);
+        } catch (e) {
+          console.error("Recommended load failed for tag:", tag, e);
+        }
       }
 
       const seen = new Set();
       const unique = [];
+
       for (const a of combined) {
-        if (!seen.has(a.id)) { seen.add(a.id); unique.push(a); }
+        if (!seen.has(a.id)) {
+          seen.add(a.id);
+          unique.push(a);
+        }
       }
 
+      if (unique.length === 0) {
+        recRow.innerHTML = "";
+        empty.textContent = "Could not load recommendations right now.";
+        empty.style.display = "block";
+        return;
+      }
+
+      recRow.innerHTML = "";
+      empty.style.display = "none";
       renderRow(recRow, unique.slice(0, LIMIT), prefs[0]);
     }
 
-    // SEARCH BAR
     let searchTimer = null;
 
     async function doSearch(q){
@@ -560,6 +616,7 @@ $username = htmlspecialchars($_SESSION['username']);
         });
 
         const list = (json.data || []).map(normalizeAnime);
+
         if (list.length === 0) {
           recRow.innerHTML = "";
           empty.textContent = "No results found.";
@@ -570,7 +627,6 @@ $username = htmlspecialchars($_SESSION['username']);
         empty.style.display = "none";
         renderRow(recRow, list.slice(0, 18), "Search");
       } catch (e) {
-        // If search fails, show a real message and log the error
         console.error("Search failed:", e);
         recRow.innerHTML = "";
         empty.textContent = "Search failed (try again).";
@@ -584,7 +640,6 @@ $username = htmlspecialchars($_SESSION['username']);
       searchTimer = setTimeout(() => doSearch(q), 450);
     });
 
-    // BUILD SECTIONS + LOAD ROWS
     async function init(){
       sectionsEl.innerHTML = ROW_CONFIG.map(r => sectionHTML(r.key, r.title)).join("");
 
@@ -594,8 +649,9 @@ $username = htmlspecialchars($_SESSION['username']);
 
         try {
           let list = [];
+
           if (r.type === "top") {
-            list = await loadTopRow(r.key);
+            list = await loadTopRow();
             renderRow(rowEl, list, "Top");
           } else if (r.type === "genre") {
             list = await loadGenreRow(r.key, r.name);
