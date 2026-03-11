@@ -2,215 +2,340 @@
 
 class loginDB
 {
-private $logindb;
+    private $logindb;
 
-public function __construct()
-{
-	$this->logindb = new mysqli("100.102.151.59","it490","123","it490");
+    public function __construct()
+    {
+        $this->logindb = new mysqli("100.102.151.59", "it490", "123", "it490");
 
-	if ($this->logindb->connect_errno != 0)
-	{
-		echo "Error connecting to database: ".$this->logindb->connect_error.PHP_EOL;
-		exit(1);
-	}
-	echo "correctly connected to database".PHP_EOL;
-}
+        if ($this->logindb->connect_errno != 0)
+        {
+            error_log("Error connecting to database: " . $this->logindb->connect_error);
+            exit(1);
+        }
+    }
 
-public function validateLogin($username,$password)
-{
-	$un = $this->logindb->real_escape_string($username);
+    public function validateLogin($username, $password)
+    {
+        $un = $this->logindb->real_escape_string($username);
 
-	$statement = "select * from users where username = '$un'";
-	$response = $this->logindb->query($statement);
+        $statement = "SELECT * FROM users WHERE username = '$un'";
+        $response = $this->logindb->query($statement);
 
-	while ($row = $response->fetch_assoc())
-	{
-		echo "checking password for $username".PHP_EOL;
-		if (password_verify($password, $row["password"]))
-		{
-			echo "passwords match for $username".PHP_EOL;
-			return 1;// password match
-		}
-		echo "passwords did not match for $username".PHP_EOL;
-	}
-	return 0;//no users matched username
-}
+        if (!$response) {
+            return 0;
+        }
 
-public function registerUser($username, $password)
-{
-    $un = $this->logindb->real_escape_string($username);
-    $check = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-    if ($check->fetch_assoc()) return false; // already exists
+        while ($row = $response->fetch_assoc())
+        {
+            if (password_verify($password, $row["password"]))
+            {
+                return 1;
+            }
+        }
 
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $safeHash = $this->logindb->real_escape_string($hash);
-    $statement = "INSERT INTO users (username, password) VALUES ('$un', '$safeHash')";
-    return $this->logindb->query($statement);
-}
+        return 0;
+    }
 
-public function createSession($username)
-{
-    $un = $this->logindb->real_escape_string($username);
-    $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-    $row = $result->fetch_assoc();
-    if (!$row) return false;
+    public function registerUser($username, $password, $email, $emailNotifications = 0)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $em = $this->logindb->real_escape_string($email);
+        $emailNotifications = (int)$emailNotifications;
 
-    $sessionKey = bin2hex(random_bytes(32));
-    $safeKey = $this->logindb->real_escape_string($sessionKey);
-    $userId = $row['id'];
+        $checkUser = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+        if ($checkUser && $checkUser->fetch_assoc()) {
+            return ['ok' => false, 'error' => 'Username already exists'];
+        }
 
-    $this->logindb->query(
-        "INSERT INTO sessions (user_id, session_key, created_at) VALUES ($userId, '$safeKey', NOW())"
-    );
-    return $sessionKey;
-}
+        $checkEmail = $this->logindb->query("SELECT id FROM users WHERE email = '$em'");
+        if ($checkEmail && $checkEmail->fetch_assoc()) {
+            return ['ok' => false, 'error' => 'Email already exists'];
+        }
 
-public function validateSession($sessionId)
-{
-    $safeId = $this->logindb->real_escape_string($sessionId);
-    $result = $this->logindb->query("SELECT id FROM sessions WHERE session_key = '$safeId'");
-    return (bool)$result->fetch_assoc();
-}
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $safeHash = $this->logindb->real_escape_string($hash);
 
-public function addToWatchlist($username, $animeId, $animeTitle)
-{
-	$un = $this->logindb->real_escape_string($username);
-	$result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-	$row = $result->fetch_assoc();
+        $statement = "INSERT INTO users (username, password, email, email_notifications)
+                      VALUES ('$un', '$safeHash', '$em', $emailNotifications)";
 
-	if (!$row) return false;
+        $ok = $this->logindb->query($statement);
 
+        if ($ok) {
+            return ['ok' => true];
+        }
 
-	$userId = $row['id'];
-	$aid = (int)$animeId;
-	$title = $this->logindb->real_escape_string($animeTitle);
-	
-  
-	$check = $this->logindb->query("SELECT id FROM watch_list WHERE user_id = $userId AND anime_id = $aid");
-	if ($check->fetch_assoc()) return false;
+        return ['ok' => false, 'error' => 'Register failed'];
+    }
 
+    public function createSession($username)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
 
-	$statement = "INSERT INTO watch_list (user_id, anime_id, title, added_at) VALUES ($userId, $aid, '$title', NOW())";
-	$this->logindb->query($statement);
-	return true;
+        if (!$result) return false;
 
-}
+        $row = $result->fetch_assoc();
+        if (!$row) return false;
 
-	public function getWatchlist($username)
-{
+        $sessionKey = bin2hex(random_bytes(32));
+        $safeKey = $this->logindb->real_escape_string($sessionKey);
+        $userId = (int)$row['id'];
 
-	$un = $this->logindb->real_escape_string($username);
-	$result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-	$row = $result->fetch_assoc();
+        $ok = $this->logindb->query(
+            "INSERT INTO sessions (user_id, session_key, created_at) VALUES ($userId, '$safeKey', NOW())"
+        );
 
-	if (!$row) return false;
-	
-	$userId = $row['id'];
-	
+        if (!$ok) return false;
 
-	$response = $this->logindb->query("SELECT anime_id, title, added_at FROM watch_list WHERE user_id = $userId");
-	
-	$list = [];
-	while ($row = $response->fetch_assoc())
-{
-	$list[] = $row;
-}
+        return $sessionKey;
+    }
 
-	return $list;
-}
+    public function validateSession($sessionId)
+    {
+        $safeId = $this->logindb->real_escape_string($sessionId);
+        $result = $this->logindb->query("SELECT id FROM sessions WHERE session_key = '$safeId'");
 
+        if (!$result) return false;
 
-	public function addReview($username, $animeId, $animeTitle, $rating, $reviewText)
-{
+        return (bool)$result->fetch_assoc();
+    }
 
-$un = $this->logindb->real_escape_string($username);
-	$result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
-	$row = $result->fetch_assoc();
-	
-	if (!$row) return false;
+    public function addToWatchlist($username, $animeId, $animeTitle)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
 
-	$userId = $row['id'];
-	$aid = (int)$animeId;
-	$title = $this->logindb->real_escape_string($animeTitle);
-	$rating = (int)$rating;
-	$text = $this->logindb->real_escape_string($reviewText);
-	$statement = "REPLACE INTO user_reviews (user_id, anime_id, title, score, review_text, created_at) VALUES ($userId, $aid, '$title', $rating, '$text', NOW())";
-	return $this -> logindb->query($statement);
-}
+        if (!$result) return false;
 
-	public function getReviews($animeId)
-{
+        $row = $result->fetch_assoc();
+        if (!$row) return false;
 
-	$aid = (int)$animeId;
-	$statement = "SELECT u.username, r.score, r.review_text, r.created_at FROM user_reviews r JOIN users u ON r.user_id = u.id WHERE r.anime_id = $aid";
-	$response = $this->logindb->query($statement);
+        $userId = (int)$row['id'];
+        $aid = (int)$animeId;
+        $title = $this->logindb->real_escape_string($animeTitle);
 
-	$list = [];
-	while ($row = $response->fetch_assoc())
-{
-		$list[] = $row;
-}
-	return $list;
+        $check = $this->logindb->query("SELECT id FROM watch_list WHERE user_id = $userId AND anime_id = $aid");
+        if ($check && $check->fetch_assoc()) return false;
 
-}
-	public function getTopAnime($limit = 12) {
-  	$limit = (int)$limit;
-  	if ($limit < 1) $limit = 12;
-  	if ($limit > 50) $limit = 50;
+        $statement = "INSERT INTO watch_list (user_id, anime_id, title, added_at)
+                      VALUES ($userId, $aid, '$title', NOW())";
 
-  
- 	$sql = "SELECT mal_id, title, score, episodes, poster, year
-          	FROM anime_cache
-          	WHERE genre='Top'
-          	ORDER BY score DESC
-         	LIMIT $limit";
+        return $this->logindb->query($statement);
+    }
 
-  $result = $this->logindb->query($sql);
-  if (!$result) {
-    return ["ok" => false, "error" => "DB error: " . $this->conn->error];
-  }
+    public function getWatchlist($username)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
 
-  $rows = [];
-  while ($row = $result->fetch_assoc()) {
-    $rows[] = $row;
-  }
+        if (!$result) return false;
 
-  return ["ok" => true, "data" => $rows];
-}
+        $row = $result->fetch_assoc();
+        if (!$row) return false;
 
-	public function logindb_escape($str)
-{
+        $userId = (int)$row['id'];
 
-	return $this->logindb->real_escape_string($str);
-}
+        $response = $this->logindb->query("SELECT anime_id, title, added_at FROM watch_list WHERE user_id = $userId");
+        if (!$response) return [];
 
-	public function upsertAnime($animeId, $title, $score, $episodes)
-{
+        $list = [];
+        while ($row = $response->fetch_assoc())
+        {
+            $list[] = $row;
+        }
 
-	$statement = "INSERT INTO anime (anime_id, title, score, episodes, updated_at) VALUES ($animeId, '$title', $score, $episodes, NOW()) ON DUPLICATE KEY UPDATE title='$title', score=$score, episodes=$episodes, updated_at=NOW()";
+        return $list;
+    }
 
-		return $this->logindb->query($statement);
+    public function addReview($username, $animeId, $animeTitle, $rating, $reviewText)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
 
-}
+        if (!$result) return false;
 
+        $row = $result->fetch_assoc();
+        if (!$row) return false;
 
-	public function getAnimeList($genre)
-{
+        $userId = (int)$row['id'];
+        $aid = (int)$animeId;
+        $title = $this->logindb->real_escape_string($animeTitle);
+        $rating = (int)$rating;
+        $text = $this->logindb->real_escape_string($reviewText);
 
-	$g = $this->logindb->real_escape_string($genre);
-	$statement = "SELECT mal_id, title, poster, score, year FROM anime_cache WHERE genre = '$g' ORDER BY score DESC Limit 25";
-	$response = $this->logindb->query($statement);
+        $statement = "REPLACE INTO user_reviews (user_id, anime_id, title, score, review_text, created_at)
+                      VALUES ($userId, $aid, '$title', $rating, '$text', NOW())";
 
-	$list = [];
-	while ($row = $response->fetch_assoc())
-	{
-		$list[] = $row;
+        return $this->logindb->query($statement);
+    }
 
-	}
-	return ['ok' => true, 'data' => $list];
+    public function getReviews($animeId)
+    {
+        $aid = (int)$animeId;
+        $statement = "SELECT u.username, r.score, r.review_text, r.created_at
+                      FROM user_reviews r
+                      JOIN users u ON r.user_id = u.id
+                      WHERE r.anime_id = $aid";
 
-	}
+        $response = $this->logindb->query($statement);
+        if (!$response) return [];
 
+        $list = [];
+        while ($row = $response->fetch_assoc())
+        {
+            $list[] = $row;
+        }
+
+        return $list;
+    }
+
+    public function getTopAnime($limit = 12)
+    {
+        $limit = (int)$limit;
+        if ($limit < 1) $limit = 12;
+        if ($limit > 50) $limit = 50;
+
+        $sql = "SELECT mal_id, title, score, episodes, poster, year
+                FROM anime_cache
+                WHERE genre = 'Top'
+                ORDER BY score DESC
+                LIMIT $limit";
+
+        $result = $this->logindb->query($sql);
+        if (!$result) {
+            return ["ok" => false, "error" => "DB error: " . $this->logindb->error];
+        }
+
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        return ["ok" => true, "data" => $rows];
+    }
+
+    public function logindb_escape($str)
+    {
+        return $this->logindb->real_escape_string($str);
+    }
+
+    public function upsertAnime($animeId, $title, $score, $episodes)
+    {
+        $title = $this->logindb->real_escape_string($title);
+        $score = is_numeric($score) ? $score : 0;
+        $episodes = (int)$episodes;
+        $animeId = (int)$animeId;
+
+        $statement = "INSERT INTO anime (anime_id, title, score, episodes, updated_at)
+                      VALUES ($animeId, '$title', $score, $episodes, NOW())
+                      ON DUPLICATE KEY UPDATE
+                      title = '$title', score = $score, episodes = $episodes, updated_at = NOW()";
+
+        return $this->logindb->query($statement);
+    }
+
+    public function addNotification($username, $animeId, $animeTitle)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+
+        if (!$result) return false;
+
+        $row = $result->fetch_assoc();
+        if (!$row) return false;
+
+        $userId = (int)$row['id'];
+        $aid = (int)$animeId;
+        $title = $this->logindb->real_escape_string($animeTitle);
+
+        $check = $this->logindb->query("SELECT id FROM anime_notifications WHERE user_id = $userId AND anime_id = $aid");
+        if ($check && $check->fetch_assoc()) {
+            return $this->logindb->query("
+                UPDATE anime_notifications
+                SET enabled = 1, anime_title = '$title'
+                WHERE user_id = $userId AND anime_id = $aid
+            ");
+        }
+
+        $statement = "
+            INSERT INTO anime_notifications (user_id, anime_id, anime_title, enabled, last_sent_episode)
+            VALUES ($userId, $aid, '$title', 1, 0)
+        ";
+
+        return $this->logindb->query($statement);
+    }
+
+    public function removeNotification($username, $animeId)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+
+        if (!$result) return false;
+
+        $row = $result->fetch_assoc();
+        if (!$row) return false;
+
+        $userId = (int)$row['id'];
+        $aid = (int)$animeId;
+
+        return $this->logindb->query("
+            UPDATE anime_notifications
+            SET enabled = 0
+            WHERE user_id = $userId AND anime_id = $aid
+        ");
+    }
+
+    public function getNotifications($username)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id FROM users WHERE username = '$un'");
+
+        if (!$result) return [];
+
+        $row = $result->fetch_assoc();
+        if (!$row) return [];
+
+        $userId = (int)$row['id'];
+
+        $response = $this->logindb->query("
+            SELECT anime_id, anime_title, enabled, last_sent_episode
+            FROM anime_notifications
+            WHERE user_id = $userId
+        ");
+
+        if (!$response) return [];
+
+        $list = [];
+        while ($row = $response->fetch_assoc()) {
+            $list[] = $row;
+        }
+
+        return $list;
+    }
+
+    public function getAnimeList($genre)
+    {
+        $g = $this->logindb->real_escape_string($genre);
+        $statement = "SELECT mal_id, title, poster, score, year
+                      FROM anime_cache
+                      WHERE genre = '$g'
+                      ORDER BY score DESC
+                      LIMIT 25";
+
+        $response = $this->logindb->query($statement);
+        if (!$response) {
+            return ['ok' => false, 'error' => 'DB query failed'];
+        }
+
+        $list = [];
+        while ($row = $response->fetch_assoc())
+        {
+            $list[] = $row;
+        }
+
+        return ['ok' => true, 'data' => $list];
+    }
 }
 ?>
 
