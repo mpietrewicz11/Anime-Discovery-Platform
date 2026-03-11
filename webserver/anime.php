@@ -389,7 +389,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
     function getId(){
       const p = new URLSearchParams(window.location.search);
-      return p.get("id");
+	const animeId = p.get("id");
     }
 
     function escapeHtml(str){
