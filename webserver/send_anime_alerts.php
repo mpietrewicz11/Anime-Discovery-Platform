@@ -7,9 +7,9 @@ use PHPMailer\PHPMailer\PHPMailer;
 $SMTP_HOST       = 'smtp.gmail.com';
 $SMTP_PORT       = 587;
 $SMTP_SECURE     = PHPMailer::ENCRYPTION_STARTTLS;
-$SMTP_USERNAME   = 'yourgmail@gmail.com';
-$SMTP_PASSWORD   = 'your_app_password';
-$SMTP_FROM       = 'yourgmail@gmail.com';
+$SMTP_USERNAME   = 'it490.adem@gmail.com';
+$SMTP_PASSWORD   = 'it490anime!@';
+$SMTP_FROM       = 'it490.adem@gmail.com';
 $SMTP_FROM_NAME  = 'ADEM Anime Alerts';
 
 function smtp_mail($to, $subject, $body) {
