@@ -34,6 +34,7 @@ if (is_array($response)) {
     if (isset($response['ok']) && $response['ok'] === true) {
         $success = true;
     }
+
     if (isset($response['session_id'])) {
         $success = true;
     }
@@ -50,10 +51,6 @@ if ($success) {
     exit;
 }
 
-
-var_dump($response);
-die();
 header("Location: login.html?error=login_failed");
 exit;
 ?>
-
