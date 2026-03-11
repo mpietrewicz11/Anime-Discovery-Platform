@@ -19,14 +19,19 @@ if ($animeId <= 0 || $title === '') {
     exit;
 }
 
-$db = new loginDB();
+try {
+    $db = new loginDB();
 
-if ($enabled === 1) {
-    $ok = $db->addNotification($username, $animeId, $title);
-} else {
-    $ok = $db->removeNotification($username, $animeId);
+    if ($enabled === 1) {
+        $ok = $db->addNotification($username, $animeId, $title);
+    } else {
+        $ok = $db->removeNotification($username, $animeId);
+    }
+
+    echo json_encode(['ok' => (bool)$ok]);
+} catch (Throwable $e) {
+    error_log("notification_toggle.php error: " . $e->getMessage());
+    echo json_encode(['ok' => false, 'error' => 'Server error']);
 }
-
-echo json_encode(['ok' => (bool)$ok]);
 exit;
 ?>
