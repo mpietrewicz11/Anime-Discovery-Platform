@@ -134,7 +134,7 @@ $un = $this->logindb->real_escape_string($username);
 	$title = $this->logindb->real_escape_string($animeTitle);
 	$rating = (int)$rating;
 	$text = $this->logindb->real_escape_string($reviewText);
-	$statement = "INSERT INTO user_reviews (user_id, anime_id, title, score, review_text, created_at) VALUES ($userId, $aid, '$title', $rating, '$text', NOW())";
+	$statement = "REPLACE INTO user_reviews (user_id, anime_id, title, score, review_text, created_at) VALUES ($userId, $aid, '$title', $rating, '$text', NOW())";
 	return $this -> logindb->query($statement);
 }
 
