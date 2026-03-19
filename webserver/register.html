@@ -161,47 +161,51 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const msgBox = document.getElementById("msg");
-
+  
     function showMsg(text) {
+      // small helper to show error messages on the page
       msgBox.textContent = text;
       msgBox.style.display = "block";
     }
-
+  
+    // check if backend sent an error in the url
     if (params.get("error") === "fields_required") {
       showMsg("All fields are required.");
     }
-
+  
     if (params.get("error") === "invalid_email") {
       showMsg("Please enter a valid email address.");
     }
-
+  
     if (params.get("error") === "register_failed") {
       showMsg("Registration failed. Username may already exist.");
     }
-
+  
     document.getElementById("showPass").addEventListener("change", (e) => {
+      // toggle password visibility
       const type = e.target.checked ? "text" : "password";
       document.getElementById("password").type = type;
       document.getElementById("confirm").type = type;
     });
-
+  
     document.getElementById("registerForm").addEventListener("submit", (e) => {
       const email = document.getElementById("email").value.trim();
       const p1 = document.getElementById("password").value.trim();
       const p2 = document.getElementById("confirm").value.trim();
-
+  
+      // basic frontend validation before sending to backend
       if (!email) {
         e.preventDefault();
         showMsg("Email is required.");
         return;
       }
-
+  
       if (p1.length < 4) {
         e.preventDefault();
         showMsg("Password should be at least 4 characters.");
         return;
       }
-
+  
       if (p1 !== p2) {
         e.preventDefault();
         showMsg("Passwords do not match.");

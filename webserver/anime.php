@@ -1,11 +1,12 @@
 <?php
 session_start();
 
+//if user is not logged in send them back
 if (!isset($_SESSION['username'])) {
   header("Location: login.html");
   exit;
 }
-
+// using htmlspecialchrs here just to be safe when showing username on page
 $username = htmlspecialchars($_SESSION['username']);
 ?>
 <!DOCTYPE html>
@@ -14,6 +15,7 @@ $username = htmlspecialchars($_SESSION['username']);
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ADEM Project - Anime Details</title>
+
 
   <style>
     :root{
@@ -413,7 +415,7 @@ $username = htmlspecialchars($_SESSION['username']);
   <script>
     const JIKAN_BASE = "https://api.jikan.moe/v4";
     const username = <?php echo json_encode($username); ?>;
-
+     // added a small popup message at the bottom
     function toast(msg){
       const el = document.getElementById("toast");
       el.textContent = msg;
@@ -421,6 +423,7 @@ $username = htmlspecialchars($_SESSION['username']);
       setTimeout(() => el.classList.remove("show"), 2400);
     }
 
+    //get animeid from URL 
     function getId(){
       const p = new URLSearchParams(window.location.search);
       return p.get("id");
@@ -444,6 +447,7 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     async function postForm(url, dataObj){
+      // using form data here since my php files are already expecting POST this way
       const form = new URLSearchParams();
       Object.entries(dataObj).forEach(([k,v]) => form.append(k, v));
 
@@ -461,6 +465,7 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     async function loadComments(){
+      // gets all comments and reviews for current anime
       const wrap = document.getElementById("comments");
       wrap.innerHTML = '<div class="muted" style="font-size:13px;">Loading...</div>';
 
@@ -539,7 +544,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
     let currentTitle = "";
     let malUrl = "";
-
+    // added the option for where can i watch and sends people user to the other website
     function setProviderLinks(title){
       const q = encodeURIComponent(title || "anime");
       document.getElementById("watchCrunchyroll").href = "https://www.crunchyroll.com/search?q=" + q;
@@ -556,7 +561,7 @@ $username = htmlspecialchars($_SESSION['username']);
       ep.href = url ? (url.replace("/anime/", "/anime/") + "/episode") : "#";
       if (!url) ep.style.display = "none";
     }
-
+    //loads anime data from api like poster, score and year
     async function loadAnime(){
       const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}`);
       const a = json.data;
@@ -634,7 +639,7 @@ $username = htmlspecialchars($_SESSION['username']);
         </div>
       `;
     }
-
+    // little section for episodes this was one of the deluveries 
     async function loadEpisodes(){
       const btn = document.getElementById("loadEpisodesBtn");
       const wrap = document.getElementById("episodesWrap");
@@ -658,7 +663,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
           hasNext = Boolean(json.pagination && json.pagination.has_next_page);
           page += 1;
-
+          //added a small delay so i dont hit the api too much
           await new Promise(r => setTimeout(r, 250));
         }
 
@@ -756,7 +761,7 @@ $username = htmlspecialchars($_SESSION['username']);
           title: title
         });
 
-        btn.textContent = "In Watchlist ✓";
+        btn.textContent = "In Watchlist";
         btn.classList.add("ok");
         toast("Added to watchlist.");
       } catch (e) {

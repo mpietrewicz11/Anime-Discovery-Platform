@@ -1,11 +1,12 @@
 <?php
 session_start();
 
+// if user is not logged in send them back to login
 if (!isset($_SESSION['username'])) {
     header("Location: login.html");
     exit;
 }
-
+// just to be safe before showing username on the page
 $username = htmlspecialchars($_SESSION['username']);
 ?>
 <!DOCTYPE html>
@@ -286,10 +287,10 @@ $username = htmlspecialchars($_SESSION['username']);
   </div>
 
   <script>
-    const JIKAN_BASE = "https://api.jikan.moe/v4";
+    const JIKAN_BASE = "https://api.jikan.moe/v4"; //api connection
     const SFW = true;
     const LIMIT = 12;
-    const TASTE_KEY = "taste_genres_v1";
+    const TASTE_KEY = "taste_genres_v1"; // saving clicked genres so i can build simple recommendations
 
     const ROW_CONFIG = [
       { key: "top", title: "Top Anime", type: "top" },
@@ -302,6 +303,7 @@ $username = htmlspecialchars($_SESSION['username']);
     ];
 
     function sleep(ms){
+      // small delay between api calls so i do not spam requests
       return new Promise(r => setTimeout(r, ms));
     }
 
@@ -310,6 +312,7 @@ $username = htmlspecialchars($_SESSION['username']);
       const timer = setTimeout(() => controller.abort(), timeoutMs);
 
       try{
+         // using timeout here so the page does not hang forever if something fails
         const res = await fetch(url, { ...opts, signal: controller.signal });
         const json = await res.json().catch(() => ({}));
         return { res, json };
@@ -333,6 +336,7 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     function normalizeAnime(a){
+      // makes jikan response easier to use in the cards
       const year = a.year || (a.aired && a.aired.from ? new Date(a.aired.from).getFullYear() : null);
       const score = (a.score && a.score !== 0) ? a.score : null;
 
@@ -346,6 +350,7 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     function normalizeFromDbRow(r){
+      // same idea as normalizeAnime but for my backend/db response
       return {
         id: r.mal_id ?? r.id ?? r.anime_id,
         title: r.title || "Untitled",
@@ -368,6 +373,7 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     function bumpTaste(tag){
+      // every time user clicks details i count that genre tag
       const t = getTaste();
       t[tag] = (t[tag] || 0) + 1;
       saveTaste(t);
@@ -439,6 +445,7 @@ $username = htmlspecialchars($_SESSION['username']);
       const cacheKey = "jikan_genres_cache_v1";
       let cache = {};
       try {
+        // cache it so i do not keep asking jikan for the same genre ids
         cache = JSON.parse(sessionStorage.getItem(cacheKey)) || {};
       } catch {}
 
@@ -522,7 +529,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
       const prefs = topTasteTags(2);
 
-      // If no user taste exists yet, show fallback recommendations
+      //if user has not clicked anything yet just show top anime
       if (prefs.length === 0) {
         hint.textContent = "Popular picks to get you started";
 
@@ -637,10 +644,12 @@ $username = htmlspecialchars($_SESSION['username']);
     document.getElementById("searchInput").addEventListener("input", (e) => {
       const q = e.target.value.trim();
       clearTimeout(searchTimer);
+      //small delay so it searches when they type at least couple letters
       searchTimer = setTimeout(() => doSearch(q), 450);
     });
 
     async function init(){
+      // builds all homepage rows first, then recommendations
       sectionsEl.innerHTML = ROW_CONFIG.map(r => sectionHTML(r.key, r.title)).join("");
 
       for (const r of ROW_CONFIG) {
@@ -662,7 +671,7 @@ $username = htmlspecialchars($_SESSION['username']);
           }
         } catch (e) {
           console.error("Row load failed:", r.key, e);
-          rowEl.innerHTML = `<div class="empty">Could not load this row right now.</div>`;
+          rowEl.innerHTML = `<div class="empty">Could not load this row right now. try again later</div>`;
         } finally {
           loaderEl.style.display = "none";
         }

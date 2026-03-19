@@ -17,7 +17,7 @@ if ($username === '' || $password === '') {
     header("Location: login.html?error=fields_required");
     exit;
 }
-
+//connection with rabbitmq
 $client = new rabbitMQClient("testRabbitMQ.ini", "testServer");
 
 $request = [

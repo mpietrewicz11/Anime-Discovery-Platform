@@ -115,7 +115,7 @@ New here? <a href="register.html">Create an account</a>
 
 const params = new URLSearchParams(window.location.search);
 const messageDiv = document.getElementById("message");
-
+//added this to show error when the password is incorrect
 function showMessage(text,type){
   messageDiv.textContent = text;
   messageDiv.classList.add(type);
@@ -125,7 +125,7 @@ function showMessage(text,type){
 if(params.get("registered")==="1"){
   showMessage("Registration successful. Please log in.","success");
 }
-
+//i fixed here because it didn't wanted to show the error message
 if(params.get("error")==="login_failed"){
   showMessage("Login failed. Try again.","error");
 }

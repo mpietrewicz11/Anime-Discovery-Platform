@@ -1,11 +1,13 @@
 <?php
 session_start();
 
+// if user is not logged in send them back
 if (!isset($_SESSION['username'])) {
   header("Location: login.html");
   exit;
 }
 
+// just being safe before printing username into the page
 $username = htmlspecialchars($_SESSION['username']);
 ?>
 <!DOCTYPE html>
@@ -186,6 +188,7 @@ $username = htmlspecialchars($_SESSION['username']);
     const username = <?php echo json_encode($username); ?>;
 
     function toast(msg){
+      // small popup message at the bottom
       const el = document.getElementById("toast");
       el.textContent = msg;
       el.classList.add("show");
@@ -209,7 +212,7 @@ $username = htmlspecialchars($_SESSION['username']);
         throw new Error(json.error || "Could not load watchlist");
       }
 
-      // We expect: { ok:true, data:[ {anime_id, title, ...}, ... ] }
+      // expecting backend to send an array of saved anime ids
       if (!Array.isArray(json.data)) return [];
       return json.data;
     }
@@ -222,6 +225,7 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     function normalize(a){
+      // formats jikan response into what this page needs
       const year = a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : "—");
       const score = a.score ? a.score : "N/A";
       const poster = a.images?.jpg?.image_url || "";
@@ -269,9 +273,11 @@ $username = htmlspecialchars($_SESSION['username']);
         try{
           const data = await fetchAnime(id);
           items.push(normalize(data));
+
+          // small delay so i do not hit jikan too fast
           await new Promise(r => setTimeout(r, 250));
         } catch(e){
-          // skip if it fails
+          // skip one item if it fails and keep loading the rest
         }
       }
 

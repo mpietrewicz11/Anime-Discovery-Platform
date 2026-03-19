@@ -13,6 +13,7 @@ $password = trim($_POST['password'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $emailNotifications = isset($_POST['email_notifications']) ? 1 : 0;
 
+// basic check before sending anything to backend
 if ($username === '' || $password === '' || $email === '') {
     header("Location: register.html?error=fields_required");
     exit;
@@ -35,6 +36,7 @@ $request = [
 
 $response = $client->send_request($request);
 
+// keeping this log for debugging while testing registration
 error_log("Register response: " . json_encode($response));
 
 $success = false;
