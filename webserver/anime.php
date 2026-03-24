@@ -424,12 +424,12 @@ $username = htmlspecialchars($_SESSION['username']);
     }
 
     //get animeid from URL 
-    function getId(){
+    function getAnimeId(){
       const p = new URLSearchParams(window.location.search);
       return p.get("id");
     }
 
-    const animeId = getId();
+    const animeId = getAnimeId();
 
     function escapeHtml(str){
       return String(str)
@@ -440,7 +440,7 @@ $username = htmlspecialchars($_SESSION['username']);
         .replaceAll("'","&#039;");
     }
 
-    async function jikanGet(path){
+    async function getJikan(path){
       const res = await fetch(JIKAN_BASE + path);
       if (!res.ok) throw new Error("Jikan request failed");
       return res.json();
@@ -492,7 +492,7 @@ $username = htmlspecialchars($_SESSION['username']);
         wrap.innerHTML = '<div class="muted" style="font-size:13px;">Could not load comments.</div>';
       }
     }
-
+    //still working on the push notificcations they are not working now... emi
     async function loadNotificationStatus(){
       const btn = document.getElementById("notifyBtn");
       if (!btn) return;
@@ -504,7 +504,7 @@ $username = htmlspecialchars($_SESSION['username']);
         if (data.ok === true && Array.isArray(data.data)) {
           const item = data.data.find(n => String(n.anime_id) === String(animeId) && String(n.enabled) === "1");
           if (item) {
-            btn.textContent = "Notifications On ✓";
+            btn.textContent = "Notifications On";
             btn.classList.add("ok");
           } else {
             btn.textContent = "Notify Me";
@@ -515,7 +515,7 @@ $username = htmlspecialchars($_SESSION['username']);
         console.error("Could not load notification status:", e);
       }
     }
-
+    //adding the function to rate animes (its working so far)
     async function loadUserRating(){
       try {
         const res = await fetch(`review_get.php?anime_id=${encodeURIComponent(animeId)}`);
@@ -545,6 +545,7 @@ $username = htmlspecialchars($_SESSION['username']);
     let currentTitle = "";
     let malUrl = "";
     // added the option for where can i watch and sends people user to the other website
+    //added this for the watch ability for our deliveries
     function setProviderLinks(title){
       const q = encodeURIComponent(title || "anime");
       document.getElementById("watchCrunchyroll").href = "https://www.crunchyroll.com/search?q=" + q;
@@ -561,7 +562,7 @@ $username = htmlspecialchars($_SESSION['username']);
       ep.href = url ? (url.replace("/anime/", "/anime/") + "/episode") : "#";
       if (!url) ep.style.display = "none";
     }
-    //loads anime data from api like poster, score and year
+    //loads anime data from api like poster score and year so it looks pretty
     async function loadAnime(){
       const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}`);
       const a = json.data;
@@ -781,7 +782,7 @@ $username = htmlspecialchars($_SESSION['username']);
         });
 
         if (enabled === 1) {
-          btn.textContent = "Notifications On ✓";
+          btn.textContent = "Notifications On";
           btn.classList.add("ok");
           toast("Episode notifications enabled.");
         } else {
