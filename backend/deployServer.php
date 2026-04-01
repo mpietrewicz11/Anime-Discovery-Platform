@@ -40,7 +40,7 @@ foreach ($mf['files'] as $file) {
 exec("scp -o StrictHostKeyChecking=no {$tmp}/{$file['src']} mikey@{$ip}:{$file['dest']}", $o, $rc);
 if ($rc!== 0) {
 updateBundle($db,$id,'failed');
-return ['ok'=>false, 'error'=>"scp faied {$file['src']}"];}
+return ['ok'=>false, 'error'=>"scp failed {$file['src']}"];}
 }
 
 foreach ($mf['commands'] as $cmd)
@@ -70,7 +70,7 @@ switch($req['type'] ?? '') {
 	$rows = [];
 	while ($row = $r->fetch_assoc()) $rows[] = $row;
 	return ['ok'=>true,'data'=>$rows];
-	default: return ['ok'=>false,'error'=>'unkown type'];
+	default: return ['ok'=>false,'error'=>'unknown type'];
 }
 }
 
