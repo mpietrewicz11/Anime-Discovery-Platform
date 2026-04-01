@@ -1,0 +1,14 @@
+[Unit] 
+Description=RabbitMQ Backend Listener
+After=network.target rabbitmq-server.service mysql.service
+
+[Service]
+Type=simple
+User=mikey
+WorkingDirectory=/home/mikey/git/IT-490-Project/backend
+ExecStart=/usr/bin/php /home/mikey/git/IT-490-Project/backend/testRabbitMQServer.php
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
