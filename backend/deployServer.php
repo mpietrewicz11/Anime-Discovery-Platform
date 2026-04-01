@@ -2,14 +2,14 @@
 require_once('rabbitMQLib.inc');
 
 $db = new mysqli("127.0.0.1", "deploy", "123", "deploy_db");
-if ($db->connect_error) die ("db connection failed/n");
+if ($db->connect_error) die ("db connection failed\n");
 
 function updateBundle($db, $id, $status) {
 
-db->query("update bundles set status='$status', deployed_at=now() where id=$id"); }
+$db->query("update bundles set status='$status', deployed_at=now() where id=$id"); }
 
 
-funtion doInstall($db, $req) {
+function doInstall($db, $req) {
 
 $bn = $db->real_escape_string($req['bundle_name']);
 $v = $db->real_escape_string($req['version']);
@@ -56,7 +56,7 @@ return ['ok'=>true,'msg'=>"deployed $bn v$v to $t"];}
 function doRollback($db, $req){
 $t = $db->real_escape_string($req['target']);
 $r = $db->query("select * from bundles where target='$t' and status='passed' order by deployed_at desc limit 1");
-if (!$r || $r->num_rows !== 0) return ['ok'=>false, 'error'=> 'nothing to rollback'];
+if (!$r || $r->num_rows === 0) return ['ok'=>false, 'error'=> 'nothing to rollback'];
 return doInstall($db, $r->fetch_assoc()); }
 
 function requestProcessor($req) {
@@ -64,7 +64,7 @@ global $db;
 echo print_r($req, true);
 switch($req['type'] ?? '') {
 	case 'deploy': return doInstall($db, $req);
-	case 'rollback': return doRolback($db, $req);
+	case 'rollback': return doRollback($db, $req);
 	case 'list':
 	$r = $db->query("select * from bundles order by created_at desc limit 20");
 	$rows = [];
@@ -74,6 +74,6 @@ switch($req['type'] ?? '') {
 }
 }
 
-$srv = newrabbitMQServer("deploy.ini", "deployServer");
+$srv = new rabbitMQServer("deploy.ini", "deployServer");
 $srv->process_requests('requestProcessor');
 ?>
