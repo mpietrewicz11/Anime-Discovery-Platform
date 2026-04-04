@@ -53,19 +53,14 @@ class loginDB
             return ['ok' => false, 'error' => 'Email already exists'];
         }
 
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-        $safeHash = $this->logindb->real_escape_string($hash);
+	// $password already is the hash, and we need to escape it for the SQL query.
+        $safeHash = $this->logindb->real_escape_string($password);
 
         $statement = "INSERT INTO users (username, password, email, email_notifications)
                       VALUES ('$un', '$safeHash', '$em', $emailNotifications)";
 
         $ok = $this->logindb->query($statement);
-
-        if ($ok) {
-            return ['ok' => true];
-        }
-
-        return ['ok' => false, 'error' => 'Register failed'];
+	return $ok ? ['ok' => true] : ['ok' => false, 'error' => 'Register failed'];
     }
 
     public function createSession($username)
