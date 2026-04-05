@@ -26,10 +26,12 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
 $client = new rabbitMQClient("testRabbitMQ.ini", "testServer");
 
+// To improve password security, a hashing algorithm will be implemented.
+$hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 $request = [
     'type' => 'register',
     'username' => $username,
-    'password' => $password,
+    'password' => $hashedPassword, // Now the backed will receive the hash.
     'email' => $email,
     'email_notifications' => $emailNotifications
 ];
