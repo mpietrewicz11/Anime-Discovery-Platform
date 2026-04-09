@@ -1,8 +1,8 @@
 #!/bin/bash
 V=$1; T=$2
-[[ -z $V || -z $T]] && echo "usage: buidler.sh <version> <qa|prod>" && exit 1
+[[ -z $V || -z $T ]] && echo "usage: buidler.sh <version> <qa|prod>" && exit 1
 
-BN="adem_v$(V).tar.gz"
+BN="adem_v${V}.tar.gz"
 [[ $T == "qa" ]] && IP="100.107.182.2" || IP="100.76.15.56"
 
 cat > manifest.json << EOF
@@ -11,8 +11,8 @@ cat > manifest.json << EOF
 	"target": "$T",
 	"target_ip": "$IP",
 	"files": [
-		{"src": "webserver", "dest": "var/www/html"},
-		{"src": "backend", "dest": /home/mikey/git/IT-490-Project/backend"}
+		{"src": "webserver", "dest": "/var/www/html"},
+		{"src": "backend", "dest": "/home/mikey/git/IT-490-Project/backend"}
 	],
 		"commands": [],
 		"services": ["apache2", "it490-backend"]
