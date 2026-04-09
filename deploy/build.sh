@@ -1,33 +1,54 @@
 #!/bin/bash
 
-echo "Starting build process..."
+set -e
 
-PROJECT_DIR="/home/IT-490-Project"
-WEB_DIR="/var/www/html"
-BACKEND_DIR="$PROJECT_DIR/backend"
-WEBSERVER_DIR="$PROJECT_DIR/webserver"
+LOGFILE="/home/ae396/anime_build.log"
+exec > >(tee -a "$LOGFILE") 2>&1
 
-echo "Going to project directory..."
-cd $PROJECT_DIR  exit
+PROJECT_DIR="/home/ae396/git/IT-490-Project"
+WEB_SRC="$PROJECT_DIR/webserver"
+BACKEND_SRC="$PROJECT_DIR/backend"
+WEB_DEST="/var/www/html"
 
-echo "Pulling latest changes from Git..."
+echo " Build started at $(date) "
+
+if [ ! -d "$PROJECT_DIR" ]; then
+    echo "Project directory not found: $PROJECT_DIR"
+    exit 1
+fi
+
+cd "$PROJECT_DIR"
+
+echo "1 Pulling latest code..."
 git pull origin main
 
-echo "Installing PHP dependencies..."
-cd $BACKEND_DIR  exit
-composer install
+echo "2 Installing backend dependencies..."
+cd "$BACKEND_SRC"
+composer install --no-interaction
 
-echo "Copying web files to Apache directory..."
-sudo cp -r $WEBSERVER_DIR/* $WEB_DIR/
+echo "3 Deploying web files..."
+sudo rm -rf "$WEB_DEST"/*
+sudo cp -r "$WEB_SRC"/* "$WEB_DEST"/
 
-echo "Setting permissions..."
-sudo chown -R www-data:www-data $WEB_DIR
-sudo chmod -R 755 $WEB_DIR
+echo "4 Setting ownership and permissions..."
+sudo chown -R www-data:www-data "$WEB_DEST"
+sudo find "$WEB_DEST" -type d -exec chmod 755 {} ;
+sudo find "$WEB_DEST" -type f -exec chmod 644 {} ;
 
-echo "Restarting Apache..."
+echo "5 Restarting Apache..."
 sudo systemctl restart apache2
 
-echo "Restarting backend worker..."
-sudo systemctl restart it490-backend.service
+echo "6 Restarting project services..."
+if systemctl list-unit-files | grep -q "^it490-backend.service"; then
+    sudo systemctl restart it490-backend.service
+else
+    echo "it490-backend.service not found, skipping..."
+fi
 
-echo "Build complete."
+if systemctl list-unit-files | grep -q "^it490-deploy.service"; then
+    sudo systemctl restart it490-deploy.service
+else
+    echo "it490-deploy.service not found, skipping..."
+fi
+
+echo " Build finished successfully at $(date)"
