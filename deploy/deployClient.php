@@ -1,10 +1,10 @@
 <?php
 require_once('backend/rabbitMQLib.inc');
 
-$act = $argv[1] ?? ";
-$tgt = $argv [2] ?? ";
-$f = $argv[3] ?? ";
-$v = $argv[4] ?? ";
+$act = $argv[1] ?? '';
+$tgt = $argv [2] ?? '';
+$f = $argv[3] ?? '';
+$v = $argv[4] ?? '';
 
 if (!$act || !$tgt) die("usage: php deployClient.php <deploy|rollback|list> <qa|prod> [file] [ver]\n");
 
