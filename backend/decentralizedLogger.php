@@ -1,3 +1,4 @@
+<?php
 $params = [
 	'host' => 'localhost',
 	'port' => 5672,
@@ -27,3 +28,4 @@ $queue->consume(function($msg) {
 		FILE_APPEND
 	);
 });
+?>
