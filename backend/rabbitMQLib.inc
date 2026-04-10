@@ -270,6 +270,29 @@ class rabbitMQClient
 			die("failed to send message to exchange: ". $e->getMessage()."\n");
 		}
 	}
+	function pubLogging($message)
+	{
+		$params = array();
+		$params['host'] = $this->BROKER_HOST;
+		$params['port'] = $this->BROKER_PORT;
+		$params['login'] = $this->USER;
+		$params['password'] = $this->PASSWORD;
+		$params['vhost'] = $this->VHOST;
+		$conn = new AMQPConnection($params);
+		$conn->connect();
+		$channel = new AMQPChannel($conn);
+		$exchange = new AMQPExchange($channel);
+		$exchange->setName("logs_exchange");
+		$exchange->setType("fanout")
+		$payload = [
+			"message" => $message,
+			"time" => date("c"),
+			"host" => gethostname()
+		];
+		$exchange->publish(json_encode($payload));
+		$channel->close();
+		$conn->disconnect();
+	}
 }
 ?>
 
