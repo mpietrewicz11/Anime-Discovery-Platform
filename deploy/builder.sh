@@ -21,6 +21,6 @@ EOF
 
 tar -czf $BN webserver/ backend/ manifest.json
 rm manifest.json
-scp $BN ae396@100.102.151.59:/opt/bundles/
+scp $BN ae396@100.64.95.105:/opt/bundles/
 rm $BN
 echo "sent $BN"
