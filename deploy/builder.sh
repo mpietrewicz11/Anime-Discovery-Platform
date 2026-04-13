@@ -3,7 +3,15 @@ V=$1; T=$2
 [[ -z $V || -z $T ]] && echo "usage: buidler.sh <version> <qa|prod>" && exit 1
 
 BN="adem_v${V}.tar.gz"
-[[ $T == "qa" ]] && IP="100.107.182.2" || IP="100.76.15.56"
+case $T in
+	qa-fe) IP="100.116.21.106" ;;
+	qa-be) IP="100.107.182.2" ;;
+	dev-fe) IP="100.82.248.26" ;;
+	dev-be) IP="100.96.224.82" ;;
+	prod-fe) IP="100.76.15.56" ;;
+	prod-be) IP="100.67.69.11" ;;
+	*) echo "unknown target $T" && exit 1 ;;
+esac
 
 cat > manifest.json << EOF
 {
