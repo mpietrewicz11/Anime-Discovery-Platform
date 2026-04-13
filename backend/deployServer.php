@@ -1,7 +1,7 @@
 <?php
 require_once('rabbitMQLib.inc');
 
-$db = new mysqli("127.0.0.1", "deploy", "123", "deploy_db");
+$db = new mysqli("127.0.0.1", "deploy", "123", "deploy");
 if ($db->connect_error) die ("db connection failed\n");
 
 function updateBundle($db, $id, $status) {
