@@ -283,7 +283,7 @@ class rabbitMQClient
 		$channel = new AMQPChannel($conn);
 		$exchange = new AMQPExchange($channel);
 		$exchange->setName("logs_exchange");
-		$exchange->setType("fanout")
+		$exchange->setType("fanout");
 		$payload = [
 			"message" => $message,
 			"time" => date("c"),
