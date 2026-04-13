@@ -65,6 +65,10 @@ echo print_r($req, true);
 switch($req['type'] ?? '') {
 	case 'deploy': return doInstall($db, $req);
 	case 'rollback': return doRollback($db, $req);
+	case 'markbad':
+		$id =(int)$req['id'];
+		updateBundle($db, $id, 'failed');
+		return ['ok'=>true, 'msg'=>"marked bundle $id as failed"];
 	case 'list':
 	$r = $db->query("select * from bundles order by created_at desc limit 20");
 	$rows = [];
