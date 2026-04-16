@@ -35,19 +35,20 @@ return ['ok'=>false, 'error'=>'extract failed'];
 
 $mf = json_decode(file_get_contents("$tmp/manifest.json"), true);
 $ip = $mf['target_ip'];
+$user = strpos($t, 'fe') !== false ? 'emi': 'mikey';
 
 foreach ($mf['files'] as $file) {
-exec("scp -o StrictHostKeyChecking=no {$tmp}/{$file['src']} mikey@{$ip}:{$file['dest']}", $o, $rc);
+exec("scp -o StrictHostKeyChecking=no {$tmp}/{$file['src']}{$user}@{$ip}:{$file['dest']}", $o, $rc);
 if ($rc!== 0) {
 updateBundle($db,$id,'failed');
 return ['ok'=>false, 'error'=>"scp failed {$file['src']}"];}
 }
 
 foreach ($mf['commands'] as $cmd)
-exec("ssh -o StrictHostKeyChecking=no mikey@$ip '$cmd'");
+exec("ssh -o StrictHostKeyChecking=no {$user}@$ip '$cmd'");
 
 foreach ($mf['services'] as $svc)
-exec("ssh -o StrictHostKeyChecking=no mikey@$ip 'sudo systemctl restart $svc'");
+exec("ssh -o StrictHostKeyChecking=no {$user}@$ip 'sudo systemctl restart $svc'");
 
 exec("rm -rf $tmp");
 updateBundle($db, $id, 'passed');
