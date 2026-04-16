@@ -19,8 +19,7 @@ cat > manifest.json << EOF
 	"target": "$T",
 	"target_ip": "$IP",
 	"files": [
-		{"src": "webserver", "dest": "/var/www/html"},
-		{"src": "backend", "dest": "/home/mikey/git/IT-490-Project/backend"}
+		{"src": "webserver", "dest": "/var/www/html"}
 	],
 		"commands": [],
 		"services": ["apache2", "it490-backend"]
