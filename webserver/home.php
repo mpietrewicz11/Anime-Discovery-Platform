@@ -14,7 +14,7 @@ $username = htmlspecialchars($_SESSION['username']);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ADEM Project - Home</title>
+  <title>ADEM Project1111 - Home</title>
 
   <style>
     :root{
