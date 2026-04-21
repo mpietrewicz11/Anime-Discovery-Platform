@@ -16,7 +16,7 @@ $exchange->setType("fanout");
 $exchange->declareExchange();
 
 $queue = new AMQPQueue($channel);
-$queue->setName("");
+$queue->setName("logs_queue");
 $queue->setFlags(AMQP_EXCLUSIVE);
 $queue->declareQueue();
 $queue->bind("logs.exchange");

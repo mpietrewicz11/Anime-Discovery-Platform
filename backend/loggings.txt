@@ -1,0 +1,16 @@
+{
+    "time": "2026-04-21T16:38:08+00:00",
+    "lvl": "INFO",
+    "message": "{\"lvl\":\"INFO\",\"message\":\"Able to test log from the anime website\",\"service\":\"ADEMService\",\"user_id\":\"user_123\"}",
+    "service": "ServiceName",
+    "host": "ae396-VirtualBox",
+    "user_id": "user_id_any"
+}
+{
+    "time": "2026-04-21T16:38:33+00:00",
+    "lvl": "INFO",
+    "message": "{\"lvl\":\"INFO\",\"message\":\"Able to test log from the anime website\",\"service\":\"ADEMService\",\"user_id\":\"user_123\"}",
+    "service": "ServiceName",
+    "host": "ae396-VirtualBox",
+    "user_id": "user_id_any"
+}
