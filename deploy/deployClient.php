@@ -15,7 +15,7 @@ if ($act === 'deploy') {
 	$req['version'] = $v;
 	$req['filename'] = $f;
 }
-if $act === 'markbad'){
+if ($act === 'markbad'){
 	$req['id'] = (int)$f;
 }
 
