@@ -15,6 +15,9 @@ if ($act === 'deploy') {
 	$req['version'] = $v;
 	$req['filename'] = $f;
 }
+if $act === 'markbad'){
+	$req['id'] = (int)$f;
+}
 
 print_r($c->send_request($req));
 ?>
