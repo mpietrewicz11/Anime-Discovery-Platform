@@ -8,7 +8,7 @@ case $T in
 	qa-be) IP="100.107.182.2" ;;
 	dev-fe) IP="100.82.248.26" ;;
 	dev-be) IP="100.96.224.82" ;;
-	prod-fe) IP="100.90.102.9" ;;
+	prod-fe) IP="100.76.15.56" ;;
 	prod-be) IP="100.67.69.11" ;;
 	*) echo "unknown target $T" && exit 1 ;;
 esac
