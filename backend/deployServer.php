@@ -38,7 +38,7 @@ $ip = $mf['target_ip'];
 $user = strpos($t, 'fe') !== false ? 'emi': 'mikey';
 
 foreach ($mf['files'] as $file) {
-exec("scp -r -o StrictHostKeyChecking=no {$tmp}/{$file['src']}/* {$user}@{$ip}:{$file['dest']}", $o, $rc);
+exec("rsync -az --delete -e 'ssh -o StrictHostKeyChecking=no' {$tmp}/{$file['src']}/ {$user}@{$ip}:{$file['dest']}/", $o, $rc);
 if ($rc!== 0) {
 updateBundle($db,$id,'failed');
 return ['ok'=>false, 'error'=>"scp failed {$file['src']}"];}
