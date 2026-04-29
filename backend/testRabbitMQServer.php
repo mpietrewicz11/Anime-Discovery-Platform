@@ -7,6 +7,8 @@ require_once('login.php.inc');
 
 function logEvent($msg) {
     exec("logger -t it490 " . escapeshellarg($msg));
+    $entry = date("Y-m-d H:i:s") . " [" . gethostname() . "] " . $msg . PHP_EOL;
+    file_put_contents("/var/log/it490.log", $entry, FILE_APPEND);
 }
 
 function doRegister($username, $password, $email, $emailNotifications)
