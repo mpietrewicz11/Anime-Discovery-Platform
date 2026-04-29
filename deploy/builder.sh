@@ -26,7 +26,7 @@ cat > manifest.json << EOF
 	}
 EOF
 
-tar -czf $BN webserver/ manifest.json
+tar -czf $BN webserver/ backend/ manifest.json
 rm manifest.json
 scp $BN ae396@100.64.95.105:/opt/bundles/
 rm $BN
