@@ -5,6 +5,10 @@ require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 require_once('login.php.inc');
 
+function logEvent($msg) {
+    exec("logger -t it490 " . escapeshellarg($msg));
+}
+
 function doRegister($username, $password, $email, $emailNotifications)
 {
     $db = new loginDB();
@@ -109,11 +113,20 @@ function requestProcessor($request)
                 $emailNotifications
             );
 
+ logEvent("register attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
+    return $result;
+
         case "login":
             if (!isset($request['username']) || !isset($request['password'])) {
                 return ['ok' => false, 'error' => 'Missing login fields'];
             }
-            return doLogin($request['username'], $request['password']);
+            return doLogin($request['username'], $request['password']);case "login":
+    if (!isset($request['username']) || !isset($request['password'])) {
+        return ['ok' => false, 'error' => 'Missing login fields'];
+    }
+    $result = doLogin($request['username'], $request['password']);
+    logEvent("login attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
+    return $result;
 
         case "validate_session":
             if (!isset($request['sessionId'])) {
