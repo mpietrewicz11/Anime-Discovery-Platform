@@ -331,6 +331,20 @@ class loginDB
 
         return ['ok' => true, 'data' => $list];
     }
+    public function getAnimeByGenre($genre, $limit = 12)
+{
+    $stmt = $this->db->prepare(
+        "SELECT mal_id, title, poster, score, year
+         FROM anime_cache
+         WHERE genre = ?
+         ORDER BY score DESC
+         LIMIT ?"
+    );
+    $stmt->bind_param("si", $genre, $limit);
+    $stmt->execute();
+    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    return ['ok' => true, 'data' => $rows];
+}
 }
 ?>
 
