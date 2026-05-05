@@ -294,12 +294,16 @@ $username = htmlspecialchars($_SESSION['username']);
 
     const ROW_CONFIG = [
       { key: "top", title: "Top Anime", type: "top" },
-      { key: "shounen", title: "Shonen Picks", type: "demographic", name: "Shounen" },
+      { key: "shounen", title: "Shonen Picks", type: "genre", name: "Shounen" },
       { key: "romance", title: "Romance", type: "genre", name: "Romance" },
       { key: "comedy", title: "Comedy", type: "genre", name: "Comedy" },
       { key: "mystery", title: "Mystery", type: "genre", name: "Mystery" },
       { key: "sports", title: "Sports", type: "genre", name: "Sports" },
       { key: "fantasy", title: "Fantasy", type: "genre", name: "Fantasy" },
+      { key: "action",  title: "Action",  type: "genre", name: "Action"  },
+      { key: "drama",   title: "Drama",   type: "genre", name: "Drama"   },
+      { key: "scifi",   title: "Sci-Fi",  type: "genre", name: "SciFi"   },
+      { key: "horror",  title: "Horror",  type: "genre", name: "Horror"  },
     ];
 
     function sleep(ms){
@@ -492,7 +496,23 @@ $username = htmlspecialchars($_SESSION['username']);
       return (j.data || []).map(normalizeAnime);
     }
 
-    async function loadGenreRow(key, genreName){
+    async function loadFromCache(genreName){
+      try {
+        const { res, json } = await fetchJson(
+          "get_anime_by_genre.php?genre=" + encodeURIComponent(genreName) + "&limit=" + encodeURIComponent(LIMIT),
+          {},
+          8000
+        );
+        if (res.ok && json && json.ok === true && Array.isArray(json.data) && json.data.length > 0) {
+          return json.data.map(normalizeFromDbRow).filter(x => x.id);
+        }
+      } catch (e) {
+        console.error("Cache fetch failed for genre:", genreName, e);
+      }
+      return null;
+    }
+
+    async function jikanGenreRow(key, genreName){
       const genreId = await getGenreIdByName(genreName);
       if (!genreId) return [];
 
@@ -507,7 +527,7 @@ $username = htmlspecialchars($_SESSION['username']);
       return (json.data || []).map(normalizeAnime);
     }
 
-    async function loadDemographicRow(key, demoName){
+    async function jikanDemographicRow(key, demoName){
       const demoId = await getDemographicIdByName(demoName);
       if (!demoId) return [];
 
@@ -557,16 +577,15 @@ $username = htmlspecialchars($_SESSION['username']);
         try {
           let list = [];
 
-          if (tag.toLowerCase() === "shounen" || tag.toLowerCase() === "shonen picks") {
-            list = await loadDemographicRow("rec", "Shounen");
-          } else if (tag.toLowerCase() === "top") {
+          if (tag.toLowerCase() === "top") {
             list = await loadTopRow();
           } else {
-            list = await loadGenreRow("rec", tag);
+            const cached = await loadFromCache(tag);
+            list = cached !== null ? cached : await jikanGenreRow("rec", tag);
           }
 
           combined = combined.concat(list);
-          await sleep(500);
+          await sleep(200);
         } catch (e) {
           console.error("Recommended load failed for tag:", tag, e);
         }
@@ -663,10 +682,8 @@ $username = htmlspecialchars($_SESSION['username']);
             list = await loadTopRow();
             renderRow(rowEl, list, "Top");
           } else if (r.type === "genre") {
-            list = await loadGenreRow(r.key, r.name);
-            renderRow(rowEl, list, r.name);
-          } else if (r.type === "demographic") {
-            list = await loadDemographicRow(r.key, r.name);
+            const cached = await loadFromCache(r.name);
+            list = cached !== null ? cached : await jikanGenreRow(r.key, r.name);
             renderRow(rowEl, list, r.name);
           }
         } catch (e) {
@@ -676,7 +693,7 @@ $username = htmlspecialchars($_SESSION['username']);
           loaderEl.style.display = "none";
         }
 
-        await sleep(400);
+        await sleep(200);
       }
 
       await buildRecommended();

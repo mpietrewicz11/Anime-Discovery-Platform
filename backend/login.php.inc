@@ -332,19 +332,52 @@ class loginDB
         return ['ok' => true, 'data' => $list];
     }
     public function getAnimeByGenre($genre, $limit = 12)
-{
-    $stmt = $this->db->prepare(
-        "SELECT mal_id, title, poster, score, year
-         FROM anime_cache
-         WHERE genre = ?
-         ORDER BY score DESC
-         LIMIT ?"
-    );
-    $stmt->bind_param("si", $genre, $limit);
-    $stmt->execute();
-    $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    return ['ok' => true, 'data' => $rows];
-}
+    {
+        $g = $this->logindb->real_escape_string($genre);
+        $limit = (int)$limit;
+        if ($limit < 1)  $limit = 12;
+        if ($limit > 50) $limit = 50;
+
+        $sql = "SELECT mal_id, title, poster, score, year
+                FROM anime_cache
+                WHERE genre = '$g'
+                ORDER BY score DESC
+                LIMIT $limit";
+
+        $result = $this->logindb->query($sql);
+        if (!$result) {
+            return ['ok' => false, 'error' => 'DB error: ' . $this->logindb->error];
+        }
+
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        return ['ok' => true, 'data' => $rows];
+    }
+
+    public function getAnimeDetail($animeId)
+    {
+        $aid = (int)$animeId;
+
+        $sql = "SELECT mal_id, title, poster, score, year, episodes, type, synopsis, genre, url
+                FROM anime_cache
+                WHERE mal_id = $aid
+                LIMIT 1";
+
+        $result = $this->logindb->query($sql);
+        if (!$result) {
+            return ['ok' => false, 'error' => 'DB error: ' . $this->logindb->error];
+        }
+
+        $row = $result->fetch_assoc();
+        if (!$row) {
+            return ['ok' => false, 'error' => 'Not found'];
+        }
+
+        return ['ok' => true, 'data' => $row];
+    }
 }
 ?>
 

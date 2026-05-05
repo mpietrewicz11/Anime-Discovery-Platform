@@ -564,60 +564,90 @@ $username = htmlspecialchars($_SESSION['username']);
     }
     //loads anime data from api like poster score and year so it looks pretty
     async function loadAnime(){
-      const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}`);
-      const a = json.data;
+  let a = null;
 
-      document.getElementById("poster").src =
-        a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "";
+  // try our own cache first, if not we got a fall back
+  try {
+    const res = await fetch(`get_anime_detail.php?anime_id=${encodeURIComponent(animeId)}`);
+    const json = await res.json();
 
-      currentTitle = a.title || "Untitled";
-      document.getElementById("title").textContent = currentTitle;
-
-      const year = a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : "—");
-      const score = a.score ? `${a.score}/10` : "N/A";
-      const eps = a.episodes ? `${a.episodes} eps` : "—";
-      const type = a.type || "—";
-
-      const genres = (a.genres || []).map(g => `<span class="pill">${escapeHtml(g.name)}</span>`).join(" ");
-      document.getElementById("meta").innerHTML = `
-        <span class="pill">⭐ ${score}</span>
-        <span class="pill">${escapeHtml(String(year))}</span>
-        <span class="pill">${escapeHtml(type)}</span>
-        <span class="pill">${escapeHtml(eps)}</span>
-        <span style="flex-basis: 100%; height: 1px;"></span>
-        ${genres}
-      `;
-
-      document.getElementById("synopsis").textContent =
-        a.synopsis ? a.synopsis : "No synopsis available.";
-
-      malUrl = a.url || "";
-      setMALLinks(malUrl);
-      setProviderLinks(currentTitle);
-
-      const wlBtn = document.getElementById("watchlistBtn");
-      wlBtn.textContent = "Add to Watchlist";
-      wlBtn.classList.remove("ok");
-
-      try {
-        const res = await fetch("watchlist_get.php");
-        const data = await res.json();
-
-        if (data.ok === true && Array.isArray(data.data)) {
-          const inList = data.data.some(item => String(item.anime_id) === String(animeId));
-          if (inList) {
-            wlBtn.textContent = "In Watchlist ✓";
-            wlBtn.classList.add("ok");
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-
-      await loadComments();
-      await loadUserRating();
-      await loadNotificationStatus();
+    if (res.ok && json.ok === true && json.data) {
+      const d = json.data;
+      // same filed we extracted from jikan
+      a = {
+        images: { jpg: { large_image_url: d.poster || "", image_url: d.poster || "" } },
+        title: d.title || "Untitled",
+        year: d.year || null,
+        score: d.score ? Number(d.score) : null,
+        episodes: d.episodes || null,
+        type: d.type || "—",
+        synopsis: d.synopsis || "",
+        genres: d.genre
+          ? d.genre.split(",").map(g => ({ name: g.trim() }))
+          : [],
+        url: d.url || "",
+        aired: null
+      };
     }
+  } catch (e) {
+    console.warn("Cache lookup failed, falling back to Jikan:", e);
+  }
+
+  // fall back to jikan if cache missed or failed
+  if (!a) {
+    const json = await jikanGet(`/anime/${encodeURIComponent(animeId)}`);
+    a = json.data;
+  }
+
+  // everything below stays exactly the same as before
+  document.getElementById("poster").src =
+    a.images?.jpg?.large_image_url || a.images?.jpg?.image_url || "";
+
+  currentTitle = a.title || "Untitled";
+  document.getElementById("title").textContent = currentTitle;
+
+  const year = a.year || (a.aired?.from ? new Date(a.aired.from).getFullYear() : "—");
+  const score = a.score ? `${a.score}/10` : "N/A";
+  const eps = a.episodes ? `${a.episodes} eps` : "—";
+  const type = a.type || "—";
+
+  const genres = (a.genres || []).map(g => `<span class="pill">${escapeHtml(g.name)}</span>`).join(" ");
+  document.getElementById("meta").innerHTML = `
+    <span class="pill">⭐ ${score}</span>
+    <span class="pill">${escapeHtml(String(year))}</span>
+    <span class="pill">${escapeHtml(type)}</span>
+    <span class="pill">${escapeHtml(eps)}</span>
+    <span style="flex-basis: 100%; height: 1px;"></span>
+    ${genres}
+  `;
+
+  document.getElementById("synopsis").textContent =
+    a.synopsis ? a.synopsis : "No synopsis available.";
+
+  malUrl = a.url || "";
+  setMALLinks(malUrl);
+  setProviderLinks(currentTitle);
+
+  const wlBtn = document.getElementById("watchlistBtn");
+  wlBtn.textContent = "Add to Watchlist";
+  wlBtn.classList.remove("ok");
+
+  try {
+    const res = await fetch("watchlist_get.php");
+    const data = await res.json();
+    if (data.ok === true && Array.isArray(data.data)) {
+      const inList = data.data.some(item => String(item.anime_id) === String(animeId));
+      if (inList) {
+        wlBtn.textContent = "In Watchlist ✓";
+        wlBtn.classList.add("ok");
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  await loadComments();
+  await loadUserRating();
+  await loadNotificationStatus();
+}
 
     function episodeRowHTML(epNum, epTitle){
       const safeTitle = currentTitle ? currentTitle : "anime";

@@ -79,6 +79,12 @@ function doGetTopAnime($limit = 12)
 }
 
 //  this is the new cache additon: fetch a single anime by mal_id from anime_cache
+function doGetAnimeByGenre($genre, $limit = 12)
+{
+    $db = new loginDB();
+    return $db->getAnimeByGenre($genre, $limit);
+}
+
 function doGetAnimeDetail($animeId)
 {
     $db = new loginDB();
@@ -160,7 +166,13 @@ function requestProcessor($request)
             $limit = isset($request["limit"]) ? (int)$request["limit"] : 12;
             return doGetTopAnime($limit);
 
-        // for a bigger cache
+        case "get_anime_by_genre":
+            if (!isset($request['genre'])) {
+                return ['ok' => false, 'error' => 'Missing genre'];
+            }
+            $limit = isset($request['limit']) ? (int)$request['limit'] : 12;
+            return doGetAnimeByGenre($request['genre'], $limit);
+
         case "get_anime_detail":
             if (!isset($request['anime_id'])) {
                 return ['ok' => false, 'error' => 'Missing anime_id'];
