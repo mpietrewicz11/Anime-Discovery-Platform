@@ -5,22 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anime Profile</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0f1220;color:#e9ecff;min-height:100vh;padding:30px 16px;}
+body{margin:0;font-family:Arial,sans-serif;background:#0f1220;color:#e9ecff;min-height:100vh;padding:20px 16px;}
 .container{max-width:720px;margin:0 auto;}
-.profile-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:24px;margin-bottom:20px;}
+.profile-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:20px;margin-bottom:20px;}
 .avatar{width:64px;height:64px;border-radius:50%;background:#800080;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:white;margin-bottom:14px;}
 .username{font-size:22px;font-weight:700;margin-bottom:6px;}
 .bio{color:rgba(233,236,255,0.7);font-size:14px;line-height:1.6;}
 .section-title{font-size:16px;font-weight:600;margin-bottom:14px;}
 .review-item{background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;margin-bottom:10px;}
-.review-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.review-title{font-weight:600;font-size:14px;}
-.score{background:#800080;color:white;border-radius:6px;padding:2px 10px;font-size:13px;font-weight:600;}
+.review-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
+.review-title{font-weight:600;font-size:14px;flex:1;min-width:0;word-break:break-word;}
+.score{background:#800080;color:white;border-radius:6px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;}
 .review-text{font-size:13px;color:rgba(233,236,255,0.7);line-height:1.5;}
 .review-date{font-size:11px;color:rgba(233,236,255,0.4);margin-top:6px;}
-.watch-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);}
+.watch-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);flex-wrap:wrap;}
 .watch-item:last-child{border-bottom:none;}
-.status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;}
+.status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap;}
 .watching{background:rgba(0,200,100,0.15);color:#6effc0;}
 .done{background:rgba(100,100,255,0.15);color:#b3b3ff;}
 .plan_of_watch{background:rgba(255,200,0,0.1);color:#ffe87a;}

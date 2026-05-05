@@ -3,6 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ADEM Project</title>
 
 <style>
@@ -21,7 +22,7 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:15px 30px;
+    padding:14px 22px;
     background:rgba(255,255,255,0.05);
     border-bottom:1px solid rgba(255,255,255,0.12);
 }
@@ -32,9 +33,10 @@ body{
 }
 
 .nav-links a{
-    margin-left:15px;
+    margin-left:14px;
     text-decoration:none;
     color:#e9ecff;
+    font-size:14px;
 }
 
 .nav-links a:hover{
@@ -44,29 +46,35 @@ body{
 /* hero section */
 
 .hero{
-    margin-top:120px;
+    margin-top:80px;
+    padding:0 20px;
 }
 
 .hero h1{
-    font-size:40px;
+    font-size:36px;
     margin-bottom:10px;
 }
 
 .hero p{
     color:rgba(255,255,255,0.7);
-    font-size:18px;
+    font-size:16px;
+    max-width:480px;
+    margin:0 auto;
 }
 
 /* buttons */
 
 .buttons{
-    margin-top:30px;
+    margin-top:28px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px;
 }
 
 .button{
     display:inline-block;
-    padding:12px 20px;
-    margin:10px;
+    padding:12px 24px;
     background:#7c5cff;
     color:white;
     text-decoration:none;
@@ -86,14 +94,17 @@ body{
 /* Features */
 
 .features{
-    margin-top:120px;
+    margin-top:80px;
     display:flex;
+    flex-wrap:wrap;
     justify-content:center;
-    gap:40px;
+    gap:32px;
+    padding:0 20px 60px;
 }
 
 .feature{
     max-width:220px;
+    min-width:160px;
 }
 
 .feature h3{
@@ -103,6 +114,13 @@ body{
 .feature p{
     font-size:14px;
     color:rgba(255,255,255,0.7);
+}
+
+@media (max-width:480px){
+    .hero h1{ font-size:26px; }
+    .hero{ margin-top:48px; }
+    .features{ margin-top:48px; gap:24px; }
+    .feature{ max-width:100%; }
 }
 
 </style>

@@ -2,42 +2,29 @@
 session_start();
 header('Content-Type: application/json');
 
-// user must be logged in
 if (!isset($_SESSION['username'])) {
     echo json_encode(['ok' => false, 'error' => 'Not logged in']);
     exit;
 }
 
-require_once('login.php.inc');
-
-$username = $_SESSION['username'];
 $animeId = (int)($_POST['anime_id'] ?? 0);
-$title = trim($_POST['title'] ?? '');
+$title   = trim($_POST['title'] ?? '');
 $enabled = (int)($_POST['enabled'] ?? 1);
 
-// basic validation so we don't send bad data to DB
 if ($animeId <= 0 || $title === '') {
     echo json_encode(['ok' => false, 'error' => 'Missing anime info']);
     exit;
 }
 
-try {
-    $db = new loginDB();
+require_once('rabbitMQLib.inc');
 
-    // toggle notification on/off
-    if ($enabled === 1) {
-        $ok = $db->addNotification($username, $animeId, $title);
-    } else {
-        $ok = $db->removeNotification($username, $animeId);
-    }
+$client   = new rabbitMQClient("testRabbitMQ.ini", "testServer");
+$response = $client->send_request([
+    "type"      => "toggle_notification",
+    "username"  => $_SESSION['username'],
+    "anime_id"  => $animeId,
+    "title"     => $title,
+    "enabled"   => $enabled
+]);
 
-    echo json_encode(['ok' => (bool)$ok]);
-} catch (Throwable $e) {
-    // log real error, return generic message to client
-    error_log("notification_toggle.php error: " . $e->getMessage());
-
-    echo json_encode(['ok' => false, 'error' => 'Server error']);
-}
-
-exit;
-?>
+echo json_encode($response ?? ['ok' => false, 'error' => 'No response from backend']);

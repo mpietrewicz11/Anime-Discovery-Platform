@@ -79,6 +79,24 @@ function doGetTopAnime($limit = 12)
 }
 
 //  this is the new cache additon: fetch a single anime by mal_id from anime_cache
+function doGetNotifications($username)
+{
+    $db = new loginDB();
+    $list = $db->getNotifications($username);
+    return ['ok' => true, 'data' => is_array($list) ? $list : []];
+}
+
+function doToggleNotification($username, $animeId, $title, $enabled)
+{
+    $db = new loginDB();
+    if ($enabled === 1) {
+        $ok = $db->addNotification($username, $animeId, $title);
+    } else {
+        $ok = $db->removeNotification($username, $animeId);
+    }
+    return ['ok' => (bool)$ok];
+}
+
 function doGetAnimeByGenre($genre, $limit = 12)
 {
     $db = new loginDB();
@@ -165,6 +183,19 @@ function requestProcessor($request)
         case "get_top_anime":
             $limit = isset($request["limit"]) ? (int)$request["limit"] : 12;
             return doGetTopAnime($limit);
+
+        case "get_notifications":
+            if (!isset($request['username'])) {
+                return ['ok' => false, 'error' => 'Missing username'];
+            }
+            return doGetNotifications($request['username']);
+
+        case "toggle_notification":
+            if (!isset($request['username']) || !isset($request['anime_id']) || !isset($request['title'])) {
+                return ['ok' => false, 'error' => 'Missing notification fields'];
+            }
+            $enabled = isset($request['enabled']) ? (int)$request['enabled'] : 1;
+            return doToggleNotification($request['username'], (int)$request['anime_id'], $request['title'], $enabled);
 
         case "get_anime_by_genre":
             if (!isset($request['genre'])) {
