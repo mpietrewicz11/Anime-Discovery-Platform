@@ -20,17 +20,14 @@ function doRegister($username, $password, $email, $emailNotifications)
 function doLogin($username, $password)
 {
     $db = new loginDB();
-
     $ok = $db->validateLogin($username, $password);
     if (!$ok) {
         return ['ok' => false, 'error' => 'Invalid credentials'];
     }
-
     $sessionId = $db->createSession($username);
     if (!$sessionId) {
         return ['ok' => false, 'error' => 'Could not create session'];
     }
-
     return ['ok' => true, 'session_id' => $sessionId];
 }
 
@@ -41,13 +38,10 @@ function doValidate($sessionId)
     return ['ok' => (bool)$ok];
 }
 
-// handlers/listeners for watchlist and reviews/rating
-
 function doAddWatchlist($username, $animeId, $animeTitle)
 {
     $db = new loginDB();
     $ok = $db->addToWatchlist($username, $animeId, $animeTitle);
-
     return ['ok' => (bool)$ok];
 }
 
@@ -84,6 +78,13 @@ function doGetTopAnime($limit = 12)
     return $db->getTopAnime($limit);
 }
 
+//  this is the new cache additon: fetch a single anime by mal_id from anime_cache
+function doGetAnimeDetail($animeId)
+{
+    $db = new loginDB();
+    return $db->getAnimeDetail($animeId);
+}
+
 function requestProcessor($request)
 {
     echo "routing key: " . print_r($request, true) . PHP_EOL;
@@ -103,32 +104,25 @@ function requestProcessor($request)
             ) {
                 return ['ok' => false, 'error' => 'Missing registration fields'];
             }
-
             $emailNotifications = isset($request['email_notifications'])
                 ? (int)$request['email_notifications']
                 : 0;
-
-            return doRegister(
+            $result = doRegister(
                 $request['username'],
                 $request['password'],
                 $request['email'],
                 $emailNotifications
             );
-
- logEvent("register attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
-    return $result;
+            logEvent("register attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
+            return $result;
 
         case "login":
             if (!isset($request['username']) || !isset($request['password'])) {
                 return ['ok' => false, 'error' => 'Missing login fields'];
             }
-            return doLogin($request['username'], $request['password']);case "login":
-    if (!isset($request['username']) || !isset($request['password'])) {
-        return ['ok' => false, 'error' => 'Missing login fields'];
-    }
-    $result = doLogin($request['username'], $request['password']);
-    logEvent("login attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
-    return $result;
+            $result = doLogin($request['username'], $request['password']);
+            logEvent("login attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
+            return $result;
 
         case "validate_session":
             if (!isset($request['sessionId'])) {
@@ -165,6 +159,13 @@ function requestProcessor($request)
         case "get_top_anime":
             $limit = isset($request["limit"]) ? (int)$request["limit"] : 12;
             return doGetTopAnime($limit);
+
+        // for a bigger cache
+        case "get_anime_detail":
+            if (!isset($request['anime_id'])) {
+                return ['ok' => false, 'error' => 'Missing anime_id'];
+            }
+            return doGetAnimeDetail((int)$request['anime_id']);
     }
 
     return ['ok' => false, 'error' => 'Unsupported type'];
