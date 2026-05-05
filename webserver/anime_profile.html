@@ -50,15 +50,14 @@ body{margin:0;font-family:Arial,sans-serif;background:#0f1220;color:#e9ecff;min-
 <script>
 const params = new URLSearchParams(window.location.search);
 const userId = params.get("id");
-
-fetch(anime_profile_get.php?id=${userId})
+fetch(`anime_profile_get.php?id=${userId}`)
   .then(r => r.json())
   .then(data => {
     const u = data.user;
 <!-- This will take the first 2 characters from their username -->
     document.getElementById("avatar").textContent = u.username.slice(0,2).toUpperCase();
     document.getElementById("username").textContent = u.username;
-    document.getElementById("bio").textContent = u.bio  "No bio yet.";
+    document.getElementById("bio").textContent = u.bio || "Nothing in bio yet.";
 const reviewsDiv = document.getElementById("reviews");
     if(data.reviews.length === 0){
       reviewsDiv.innerHTML = '<p style="color:rgba(233,236,255,0.4)">No reviews yet.</p>';
@@ -70,9 +69,9 @@ const reviewsDiv = document.getElementById("reviews");
               <span class="review-title">${r.title}</span>
               <span class="score">${r.score} / 10</span>
             </div>
-            <div class="review-text">${r.review_text  ""}</div>
-            <div class="review-date">${r.createdat}</div>
-</div>;
+            <div class="review-text">${r.review_text || ""}</div>
+            <div class="review-date">${r.created_at}</div>
+	    </div>`;
       });
     }
 
@@ -81,10 +80,10 @@ const reviewsDiv = document.getElementById("reviews");
       watchDiv.innerHTML = '<p style="color:rgba(233,236,255,0.4)">No watchlist as of yet.</p>';
     } else {
       data.watchlist.forEach(w => {
-        watchDiv.innerHTML += 
+        watchDiv.innerHTML += `
           <div class="watch-item">
             <span>${w.title}</span>
-            <span class="status ${w.status}">${w.status.replace(//g," ")}</span>
+            <span class="status ${w.status}">${w.status.replace(/_/g," ")}</span>
           </div>`;
       });
     }
