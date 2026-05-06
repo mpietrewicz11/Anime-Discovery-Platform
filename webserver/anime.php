@@ -331,6 +331,7 @@ $username = htmlspecialchars($_SESSION['username']);
         <div class="btnRow">
           <button id="watchlistBtn" class="btn primary">Add to Watchlist</button>
           <button id="notifyBtn" class="btn">Notify Me</button>
+          <button id="testNotifBtn" class="btn" style="display:none;">Send Test Email</button>
           <a id="jikanLink" class="btn" target="_blank" rel="noreferrer">Open on MAL</a>
         </div>
         <div class="muted" style="margin-top:10px;font-size:13px">
@@ -507,9 +508,11 @@ $username = htmlspecialchars($_SESSION['username']);
           if (item) {
             btn.textContent = "Notifications On";
             btn.classList.add("ok");
+            document.getElementById("testNotifBtn").style.display = "";
           } else {
             btn.textContent = "Notify Me";
             btn.classList.remove("ok");
+            document.getElementById("testNotifBtn").style.display = "none";
           }
         }
       } catch (e) {
@@ -803,6 +806,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
     document.getElementById("notifyBtn").addEventListener("click", async () => {
       const btn = document.getElementById("notifyBtn");
+      const testBtn = document.getElementById("testNotifBtn");
       const enabled = btn.classList.contains("ok") ? 0 : 1;
 
       try {
@@ -815,15 +819,31 @@ $username = htmlspecialchars($_SESSION['username']);
         if (enabled === 1) {
           btn.textContent = "Notifications On";
           btn.classList.add("ok");
+          testBtn.style.display = "";
           toast("Episode notifications enabled.");
         } else {
           btn.textContent = "Notify Me";
           btn.classList.remove("ok");
+          testBtn.style.display = "none";
           toast("Episode notifications turned off.");
         }
       } catch (e) {
         toast(e.message);
       }
+    });
+
+    document.getElementById("testNotifBtn").addEventListener("click", async () => {
+      const btn = document.getElementById("testNotifBtn");
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      try {
+        await postForm("notification_test.php", { title: currentTitle });
+        toast("Test email sent! Check your inbox.");
+      } catch (e) {
+        toast("Could not send test email.");
+      }
+      btn.disabled = false;
+      btn.textContent = "Send Test Email";
     });
 
     if (!animeId) {

@@ -3,98 +3,330 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anime Profile</title>
+<title>Profile</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0f1220;color:#e9ecff;min-height:100vh;padding:20px 16px;}
-.container{max-width:720px;margin:0 auto;}
-.profile-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:20px;margin-bottom:20px;}
-.avatar{width:64px;height:64px;border-radius:50%;background:#800080;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:white;margin-bottom:14px;}
+:root{
+  --bg:#0f1220;
+  --panel:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.12);
+  --text:#e9ecff;
+  --muted:rgba(233,236,255,0.75);
+  --accent:#7c5cff;
+}
+
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.navbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 22px;
+  background:rgba(15,18,32,0.88);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+}
+.brand{font-weight:800;letter-spacing:.3px;}
+.nav-links{display:flex;gap:14px;align-items:center;}
+.nav-links a{color:var(--text);text-decoration:none;font-size:14px;}
+.nav-links a:hover{color:var(--accent);}
+
+.container{max-width:720px;margin:0 auto;padding:20px 16px 50px;}
+
+.profile-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:20px;
+}
+
+.avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:#800080;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:600;color:white;
+  margin-bottom:14px;
+}
+
 .username{font-size:22px;font-weight:700;margin-bottom:6px;}
-.bio{color:rgba(233,236,255,0.7);font-size:14px;line-height:1.6;}
+.bio{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:16px;}
+
+.bio-label{font-size:12px;color:var(--muted);margin-bottom:6px;}
+
+textarea{
+  width:100%;
+  min-height:80px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,0.25);
+  color:var(--text);
+  outline:none;
+  resize:vertical;
+  font-size:13px;
+  font-family:Arial,sans-serif;
+  box-sizing:border-box;
+}
+textarea:focus{border-color:rgba(124,92,255,0.7);}
+
+.save-btn{
+  margin-top:10px;
+  padding:9px 18px;
+  border-radius:10px;
+  border:none;
+  background:var(--accent);
+  color:white;
+  font-weight:600;
+  font-size:13px;
+  cursor:pointer;
+}
+.save-btn:hover{filter:brightness(1.08);}
+.save-btn:disabled{opacity:0.5;cursor:default;}
+
+.bio-msg{
+  display:none;
+  margin-top:10px;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:13px;
+}
+.bio-msg.ok{background:rgba(25,211,162,0.12);border:1px solid rgba(25,211,162,0.35);color:#b9ffe6;}
+.bio-msg.err{background:rgba(255,77,109,0.10);border:1px solid rgba(255,77,109,0.35);color:#ffb3c1;}
+
 .section-title{font-size:16px;font-weight:600;margin-bottom:14px;}
-.review-item{background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;margin-bottom:10px;}
+
+.review-item{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;
+  padding:14px;
+  margin-bottom:10px;
+}
 .review-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap;}
 .review-title{font-weight:600;font-size:14px;flex:1;min-width:0;word-break:break-word;}
 .score{background:#800080;color:white;border-radius:6px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap;}
-.review-text{font-size:13px;color:rgba(233,236,255,0.7);line-height:1.5;}
+.review-text{font-size:13px;color:var(--muted);line-height:1.5;}
 .review-date{font-size:11px;color:rgba(233,236,255,0.4);margin-top:6px;}
-.watch-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.07);flex-wrap:wrap;}
+
+.watch-item{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  flex-wrap:wrap;
+}
 .watch-item:last-child{border-bottom:none;}
-.status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap;}
-.watching{background:rgba(0,200,100,0.15);color:#6effc0;}
-.done{background:rgba(100,100,255,0.15);color:#b3b3ff;}
-.plan_of_watch{background:rgba(255,200,0,0.1);color:#ffe87a;}
-.hold{background:rgba(255,150,0,0.1);color:#ffcc80;}
-.dropped{background:rgba(255,77,109,0.1);color:#ffb3c1;}
+.watch-item span:first-child{font-size:14px;}
+.watch-date{font-size:11px;color:rgba(233,236,255,0.4);}
+
+.empty{color:var(--muted);font-size:13px;}
 </style>
 </head>
 <body>
-<!-- Profile -->
+
+<div class="navbar">
+  <div class="brand">ADEM Project</div>
+  <div class="nav-links">
+    <a href="home.php">Home</a>
+    <a href="watchlists.php">Watchlists</a>
+    <a href="my_profile.php">Profile</a>
+    <a href="logout.php">Logout</a>
+  </div>
+</div>
+
 <div class="container">
-  <div class="profile-card">
+  <div class="profile-card" id="profileCard">
     <div class="avatar" id="avatar"></div>
     <div class="username" id="username"></div>
     <div class="bio" id="bio"></div>
+
+    <div class="bio-label">Update your bio</div>
+    <textarea id="bioInput" placeholder="Tell people about yourself..."></textarea>
+    <button class="save-btn" id="saveBioBtn">Save Bio</button>
+    <div class="bio-msg" id="bioMsg"></div>
   </div>
-<!-- The reviews and ratings -->
+
+  <div class="profile-card" id="mfaCard">
+    <div class="section-title">Two-Factor Authentication</div>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 14px;">
+      When enabled, you will be emailed a 6-digit code every time you log in.
+    </p>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <span id="mfaStatus" style="font-size:14px;font-weight:700;">Loading...</span>
+      <button id="mfaToggleBtn" class="save-btn" style="margin:0;">...</button>
+    </div>
+    <div class="bio-msg" id="mfaMsg"></div>
+  </div>
+
   <div class="profile-card">
-    <div class="section-title">Reviews & Ratings</div>
-    <div id="reviews"></div>
+    <div class="section-title">Reviews &amp; Ratings</div>
+    <div id="reviews"><p class="empty">Loading...</p></div>
   </div>
-<!-- User watchlist -->
+
   <div class="profile-card">
     <div class="section-title">Watchlist</div>
-    <div id="watchlist"></div>
+    <div id="watchlist"><p class="empty">Loading...</p></div>
   </div>
 </div>
+
 <script>
-const params = new URLSearchParams(window.location.search);
-const profileUsername = params.get("username");
-if (!profileUsername) {
-  document.querySelector(".container").innerHTML = '<p style="color:rgba(233,236,255,0.5)">No user specified.</p>';
-}
-fetch(`anime_profile_get.php?username=${encodeURIComponent(profileUsername)}`)
-  .then(r => r.json())
-  .then(data => {
-    if (!data.ok) {
-      document.querySelector(".container").innerHTML = `<p style="color:rgba(233,236,255,0.5)">${data.error || "Could not load profile."}</p>`;
-      return;
-    }
-    const u = data.user;
-// This will take the first 2 characters from their username
-    document.getElementById("avatar").textContent = u.username.slice(0,2).toUpperCase();
-    document.getElementById("username").textContent = u.username;
-    document.getElementById("bio").textContent = u.bio || "Nothing in bio yet.";
-    const reviewsDiv = document.getElementById("reviews");
-    if(data.reviews.length === 0){
-      reviewsDiv.innerHTML = '<p style="color:rgba(233,236,255,0.4)">No reviews yet.</p>';
-    } else {
-      data.reviews.forEach(r => {
-        reviewsDiv.innerHTML += `
+  const params = new URLSearchParams(window.location.search);
+  const profileUsername = params.get("username");
+
+  if (!profileUsername) {
+    document.getElementById("profileCard").innerHTML = '<p class="empty">No user specified.</p>';
+    document.getElementById("reviews").innerHTML = "";
+    document.getElementById("watchlist").innerHTML = "";
+    throw new Error("no username param");
+  }
+
+  fetch(`anime_profile_get.php?username=${encodeURIComponent(profileUsername)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) {
+        document.getElementById("profileCard").innerHTML =
+          `<p class="empty">${data.error || "Could not load profile."}</p>`;
+        document.getElementById("reviews").innerHTML = "";
+        document.getElementById("watchlist").innerHTML = "";
+        return;
+      }
+
+      const u = data.user;
+      document.getElementById("avatar").textContent   = u.username.slice(0, 2).toUpperCase();
+      document.getElementById("username").textContent = u.username;
+      document.getElementById("bio").textContent      = u.bio || "No bio yet.";
+      document.getElementById("bioInput").value       = u.bio || "";
+
+      // 2FA status
+      setMfaUI(u.mfa_enabled == 1);
+
+      // reviews
+      const reviewsDiv = document.getElementById("reviews");
+      if (!data.reviews || data.reviews.length === 0) {
+        reviewsDiv.innerHTML = '<p class="empty">No reviews yet.</p>';
+      } else {
+        reviewsDiv.innerHTML = data.reviews.map(r => `
           <div class="review-item">
             <div class="review-top">
-              <span class="review-title">${r.title}</span>
-              <span class="score">${r.score} / 10</span>
+              <span class="review-title">${esc(r.title)}</span>
+              <span class="score">${esc(String(r.score))} / 10</span>
             </div>
-            <div class="review-text">${r.review_text || ""}</div>
-            <div class="review-date">${r.created_at}</div>
-	    </div>`;
-      });
+            <div class="review-text">${esc(r.review_text || "")}</div>
+            <div class="review-date">${esc(r.created_at)}</div>
+          </div>`).join("");
+      }
+
+      // watchlist
+      const watchDiv = document.getElementById("watchlist");
+      if (!data.watchlist || data.watchlist.length === 0) {
+        watchDiv.innerHTML = '<p class="empty">No anime in watchlist yet.</p>';
+      } else {
+        watchDiv.innerHTML = data.watchlist.map(w => `
+          <div class="watch-item">
+            <span>${esc(w.title)}</span>
+            <span class="watch-date">${esc(w.added_at || "")}</span>
+          </div>`).join("");
+      }
+    })
+    .catch(() => {
+      document.getElementById("reviews").innerHTML  = '<p class="empty">Could not load data.</p>';
+      document.getElementById("watchlist").innerHTML = '<p class="empty">Could not load data.</p>';
+    });
+
+  document.getElementById("saveBioBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("saveBioBtn");
+    const msg = document.getElementById("bioMsg");
+    const bio = document.getElementById("bioInput").value.trim();
+
+    btn.disabled = true;
+    btn.textContent = "Saving...";
+    msg.style.display = "none";
+    msg.className = "bio-msg";
+
+    try {
+      const form = new URLSearchParams();
+      form.append("bio", bio);
+
+      const res  = await fetch("update_bio.php", { method: "POST", body: form });
+      const json = await res.json().catch(() => ({}));
+
+      if (json.ok) {
+        document.getElementById("bio").textContent = bio || "No bio yet.";
+        msg.textContent = "Bio saved.";
+        msg.classList.add("ok");
+      } else {
+        msg.textContent = json.error || "Could not save bio.";
+        msg.classList.add("err");
+      }
+    } catch {
+      msg.textContent = "Request failed.";
+      msg.classList.add("err");
     }
 
-    const watchDiv = document.getElementById("watchlist");
-    if(data.watchlist.length === 0){
-      watchDiv.innerHTML = '<p style="color:rgba(233,236,255,0.4)">No watchlist as of yet.</p>';
-    } else {
-      data.watchlist.forEach(w => {
-        watchDiv.innerHTML += `
-          <div class="watch-item">
-            <span>${w.title}</span>
-            <span class="status ${w.status}">${w.status.replace(/_/g," ")}</span>
-          </div>`;
-      });
-    }
+    msg.style.display = "block";
+    btn.disabled = false;
+    btn.textContent = "Save Bio";
   });
+
+  function setMfaUI(enabled) {
+    const status = document.getElementById("mfaStatus");
+    const btn    = document.getElementById("mfaToggleBtn");
+    if (enabled) {
+      status.textContent = "Enabled";
+      status.style.color = "#19d3a2";
+      btn.textContent    = "Disable 2FA";
+      btn.style.background = "rgba(255,77,109,0.7)";
+    } else {
+      status.textContent = "Disabled";
+      status.style.color = "rgba(233,236,255,0.5)";
+      btn.textContent    = "Enable 2FA";
+      btn.style.background = "";
+    }
+    btn.dataset.enabled = enabled ? "1" : "0";
+  }
+
+  document.getElementById("mfaToggleBtn").addEventListener("click", async () => {
+    const btn     = document.getElementById("mfaToggleBtn");
+    const msg     = document.getElementById("mfaMsg");
+    const current = btn.dataset.enabled === "1";
+    const newVal  = current ? 0 : 1;
+
+    btn.disabled = true;
+    msg.style.display = "none";
+    msg.className = "bio-msg";
+
+    try {
+      const form = new URLSearchParams();
+      form.append("enabled", newVal);
+
+      const res  = await fetch("toggle_mfa.php", { method: "POST", body: form });
+      const json = await res.json().catch(() => ({}));
+
+      if (json.ok) {
+        setMfaUI(newVal === 1);
+        msg.textContent = newVal === 1
+          ? "2FA enabled. You will receive a code by email on every login."
+          : "2FA disabled. You can re-enable it any time.";
+        msg.classList.add("ok");
+      } else {
+        msg.textContent = json.error || "Could not update 2FA setting.";
+        msg.classList.add("err");
+      }
+    } catch {
+      msg.textContent = "Request failed.";
+      msg.classList.add("err");
+    }
+
+    msg.style.display = "block";
+    btn.disabled = false;
+  });
+
+  function esc(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 </script>
 </body>
 </html>

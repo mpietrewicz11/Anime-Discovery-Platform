@@ -331,11 +331,19 @@ class loginDB
 
         return ['ok' => true, 'data' => $list];
     }
+    public function updateBio($username, $bio)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $b  = $this->logindb->real_escape_string($bio);
+        $ok = $this->logindb->query("UPDATE users SET bio = '$b' WHERE username = '$un'");
+        return $ok ? ['ok' => true] : ['ok' => false, 'error' => 'DB error'];
+    }
+
     public function getProfile($username)
     {
         $un = $this->logindb->real_escape_string($username);
         $userResult = $this->logindb->query(
-            "SELECT id, username, bio FROM users WHERE username = '$un' LIMIT 1"
+            "SELECT id, username, bio, mfa_enabled FROM users WHERE username = '$un' LIMIT 1"
         );
         if (!$userResult) return ['ok' => false, 'error' => 'DB error'];
         $user = $userResult->fetch_assoc();
@@ -371,9 +379,19 @@ class loginDB
     public function getUserByUsername($username)
     {
         $un = $this->logindb->real_escape_string($username);
-        $result = $this->logindb->query("SELECT id, email FROM users WHERE username = '$un' LIMIT 1");
+        $result = $this->logindb->query(
+            "SELECT id, email, mfa_enabled FROM users WHERE username = '$un' LIMIT 1"
+        );
         if (!$result) return null;
         return $result->fetch_assoc();
+    }
+
+    public function setMfaEnabled($username, $enabled)
+    {
+        $un  = $this->logindb->real_escape_string($username);
+        $val = $enabled ? 1 : 0;
+        $ok  = $this->logindb->query("UPDATE users SET mfa_enabled = $val WHERE username = '$un'");
+        return $ok ? ['ok' => true] : ['ok' => false, 'error' => 'DB error'];
     }
 
     public function storeMfaCode($userId, $code)

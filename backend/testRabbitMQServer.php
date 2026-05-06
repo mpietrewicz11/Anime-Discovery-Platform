@@ -51,25 +51,46 @@ function doLogin($username, $password)
     }
 
     $user = $db->getUserByUsername($username);
-    if (!$user || empty($user['email'])) {
-        return ['ok' => false, 'error' => 'No email on file for this account'];
+    if (!$user) {
+        return ['ok' => false, 'error' => 'User not found'];
     }
 
-    $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-    $db->storeMfaCode($user['id'], $code);
+    // only trigger MFA if the user has opted in
+    if (!empty($user['mfa_enabled'])) {
+        if (empty($user['email'])) {
+            return ['ok' => false, 'error' => 'No email on file for this account'];
+        }
 
-    $sent = smtp_mail(
-        $user['email'],
-        'Your ADEM login code',
-        "Hi {$username},\n\nYour verification code is: {$code}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— ADEM Project"
-    );
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $db->storeMfaCode($user['id'], $code);
 
-    if (!$sent) {
-        error_log("MFA email failed for user: $username");
-        return ['ok' => false, 'error' => 'Could not send verification email'];
+        $sent = smtp_mail(
+            $user['email'],
+            'Your ADEM login code',
+            "Hi {$username},\n\nYour verification code is: {$code}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— ADEM Project"
+        );
+
+        if (!$sent) {
+            error_log("MFA email failed for user: $username");
+            return ['ok' => false, 'error' => 'Could not send verification email'];
+        }
+
+        return ['ok' => true, 'mfa_required' => true];
     }
 
-    return ['ok' => true, 'mfa_required' => true];
+    // MFA not enabled — create session immediately
+    $sessionId = $db->createSession($username);
+    if (!$sessionId) {
+        return ['ok' => false, 'error' => 'Could not create session'];
+    }
+
+    return ['ok' => true, 'session_id' => $sessionId];
+}
+
+function doToggleMfa($username, $enabled)
+{
+    $db = new loginDB();
+    return $db->setMfaEnabled($username, $enabled);
 }
 
 function doVerifyOtp($username, $code)
@@ -141,6 +162,12 @@ function doGetTopAnime($limit = 12)
 }
 
 //  this is the new cache additon: fetch a single anime by mal_id from anime_cache
+function doUpdateBio($username, $bio)
+{
+    $db = new loginDB();
+    return $db->updateBio($username, $bio);
+}
+
 function doGetProfile($username)
 {
     $db = new loginDB();
@@ -152,6 +179,26 @@ function doGetNotifications($username)
     $db = new loginDB();
     $list = $db->getNotifications($username);
     return ['ok' => true, 'data' => is_array($list) ? $list : []];
+}
+
+function doTestNotification($username, $animeTitle)
+{
+    $db   = new loginDB();
+    $user = $db->getUserByUsername($username);
+
+    if (!$user || empty($user['email'])) {
+        return ['ok' => false, 'error' => 'No email on file for this account'];
+    }
+
+    $sent = smtp_mail(
+        $user['email'],
+        "You're subscribed to {$animeTitle}!",
+        "Hi {$username},\n\nThanks for subscribing to {$animeTitle} on ADEM Project!\n\nYou'll receive an email alert whenever a new episode drops.\n\n— ADEM Project"
+    );
+
+    return $sent
+        ? ['ok' => true]
+        : ['ok' => false, 'error' => 'Failed to send email'];
 }
 
 function doToggleNotification($username, $animeId, $title, $enabled)
@@ -216,6 +263,12 @@ function requestProcessor($request)
             logEvent("login attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
             return $result;
 
+        case "toggle_mfa":
+            if (!isset($request['username']) || !isset($request['enabled'])) {
+                return ['ok' => false, 'error' => 'Missing fields'];
+            }
+            return doToggleMfa($request['username'], (int)$request['enabled']);
+
         case "verify_otp":
             if (!isset($request['username']) || !isset($request['code'])) {
                 return ['ok' => false, 'error' => 'Missing username or code'];
@@ -260,6 +313,12 @@ function requestProcessor($request)
             $limit = isset($request["limit"]) ? (int)$request["limit"] : 12;
             return doGetTopAnime($limit);
 
+        case "update_bio":
+            if (!isset($request['username'])) {
+                return ['ok' => false, 'error' => 'Missing username'];
+            }
+            return doUpdateBio($request['username'], $request['bio'] ?? '');
+
         case "get_profile":
             if (!isset($request['username'])) {
                 return ['ok' => false, 'error' => 'Missing username'];
@@ -271,6 +330,12 @@ function requestProcessor($request)
                 return ['ok' => false, 'error' => 'Missing username'];
             }
             return doGetNotifications($request['username']);
+
+        case "test_notification":
+            if (!isset($request['username']) || !isset($request['title'])) {
+                return ['ok' => false, 'error' => 'Missing fields'];
+            }
+            return doTestNotification($request['username'], $request['title']);
 
         case "toggle_notification":
             if (!isset($request['username']) || !isset($request['anime_id']) || !isset($request['title'])) {
