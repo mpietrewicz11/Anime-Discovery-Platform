@@ -56,7 +56,7 @@ function doLogin($username, $password)
     }
 
     // only trigger MFA if the user has opted in
-    if (!empty($user['mfa_enabled'])) {
+    if ($db->getMfaEnabled($user['id'])) {
         if (empty($user['email'])) {
             return ['ok' => false, 'error' => 'No email on file for this account'];
         }

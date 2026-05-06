@@ -343,13 +343,14 @@ class loginDB
     {
         $un = $this->logindb->real_escape_string($username);
         $userResult = $this->logindb->query(
-            "SELECT id, username, bio, mfa_enabled FROM users WHERE username = '$un' LIMIT 1"
+            "SELECT id, username, bio FROM users WHERE username = '$un' LIMIT 1"
         );
         if (!$userResult) return ['ok' => false, 'error' => 'DB error'];
         $user = $userResult->fetch_assoc();
         if (!$user) return ['ok' => false, 'error' => 'User not found'];
 
         $userId = (int)$user['id'];
+        $user['mfa_enabled'] = $this->getMfaEnabled($userId);
 
         $reviewResult = $this->logindb->query(
             "SELECT title, score, review_text, created_at
@@ -380,10 +381,21 @@ class loginDB
     {
         $un = $this->logindb->real_escape_string($username);
         $result = $this->logindb->query(
-            "SELECT id, email, mfa_enabled FROM users WHERE username = '$un' LIMIT 1"
+            "SELECT id, email FROM users WHERE username = '$un' LIMIT 1"
         );
         if (!$result) return null;
         return $result->fetch_assoc();
+    }
+
+    public function getMfaEnabled($userId)
+    {
+        $userId = (int)$userId;
+        $result = $this->logindb->query(
+            "SELECT mfa_enabled FROM users WHERE id = $userId LIMIT 1"
+        );
+        if (!$result) return 0;
+        $row = $result->fetch_assoc();
+        return $row ? (int)$row['mfa_enabled'] : 0;
     }
 
     public function setMfaEnabled($username, $enabled)
