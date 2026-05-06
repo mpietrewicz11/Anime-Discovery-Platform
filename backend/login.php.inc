@@ -355,7 +355,7 @@ class loginDB
         }
 
         $watchResult = $this->logindb->query(
-            "SELECT title, added_at
+            "SELECT title, status, added_at
              FROM watch_list
              WHERE user_id = $userId
              ORDER BY added_at DESC"
