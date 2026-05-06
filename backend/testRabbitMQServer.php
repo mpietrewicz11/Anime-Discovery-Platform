@@ -25,7 +25,9 @@ function smtp_mail($to, $subject, $body) {
         $mail->AltBody = $body;
         return $mail->send();
     } catch (\Throwable $e) {
-        error_log("SMTP error to $to: " . $e->getMessage());
+        $entry = date("Y-m-d H:i:s") . " [SMTP ERROR] to=$to error=" . $e->getMessage() . " info=" . $mail->ErrorInfo . PHP_EOL;
+        file_put_contents("/var/log/it490.log", $entry, FILE_APPEND);
+        error_log("SMTP error to $to: " . $e->getMessage() . " | " . $mail->ErrorInfo);
         return false;
     }
 }

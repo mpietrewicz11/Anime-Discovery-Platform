@@ -442,7 +442,7 @@ $username = htmlspecialchars($_SESSION['username']);
         .replaceAll("'","&#039;");
     }
 
-    async function getJikan(path){
+    async function jikanGet(path){
       const res = await fetch(JIKAN_BASE + path);
       if (!res.ok) throw new Error("Jikan request failed");
       return res.json();
