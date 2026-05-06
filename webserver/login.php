@@ -57,6 +57,10 @@ if (is_array($response) && $response['ok'] === true) {
     exit;
 }
 
-header("Location: login.html?error=login_failed");
+$errorCode = 'login_failed';
+if (!empty($response['error']) && $response['error'] === 'mfa_email_failed') {
+    $errorCode = 'mfa_email_failed';
+}
+header("Location: login.html?error=" . $errorCode);
 exit;
 ?>

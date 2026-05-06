@@ -132,6 +132,10 @@ if(params.get("error")==="login_failed"){
   showMessage("Login failed. Try again.","error");
 }
 
+if(params.get("error")==="mfa_email_failed"){
+  showMessage("Your password is correct but the verification email could not be sent. Check that the Gmail App Password is set up correctly in the backend.","error");
+}
+
 if(params.get("error")==="fields_required"){
   showMessage("All fields are required.","error");
 }

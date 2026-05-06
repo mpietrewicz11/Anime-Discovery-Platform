@@ -17,7 +17,7 @@ function smtp_mail($to, $subject, $body) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->SMTPAuth   = true;
         $mail->Username   = 'it490.adem@gmail.com';
-        $mail->Password   = 'it490anime!@';
+        $mail->Password   = 'dvdweugyquymvgsn';
         $mail->setFrom('it490.adem@gmail.com', 'ADEM Project');
         $mail->addAddress($to);
         $mail->Subject = $subject;
@@ -72,7 +72,7 @@ function doLogin($username, $password)
 
         if (!$sent) {
             error_log("MFA email failed for user: $username");
-            return ['ok' => false, 'error' => 'Could not send verification email'];
+            return ['ok' => false, 'error' => 'mfa_email_failed'];
         }
 
         return ['ok' => true, 'mfa_required' => true];
