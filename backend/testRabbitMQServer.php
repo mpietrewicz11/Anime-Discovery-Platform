@@ -17,7 +17,7 @@ function smtp_mail($to, $subject, $body) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->SMTPAuth   = true;
         $mail->Username   = 'it490.adem@gmail.com';
-        $mail->Password   = 'dvdweugyquymvgsn';
+        $mail->Password   = 'fuouqkalaznkgebp';
         $mail->setFrom('it490.adem@gmail.com', 'ADEM Project');
         $mail->addAddress($to);
         $mail->Subject = $subject;

@@ -8,7 +8,7 @@ $SMTP_HOST       = 'smtp.gmail.com';
 $SMTP_PORT       = 587;
 $SMTP_SECURE     = PHPMailer::ENCRYPTION_STARTTLS;
 $SMTP_USERNAME   = 'it490.adem@gmail.com';
-$SMTP_PASSWORD   = 'dvdweugyquymvgsn';
+$SMTP_PASSWORD   = 'fuouqkalaznkgebp';
 $SMTP_FROM       = 'it490.adem@gmail.com';
 $SMTP_FROM_NAME  = 'ADEM Anime Alerts';
 
