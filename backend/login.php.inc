@@ -331,6 +331,79 @@ class loginDB
 
         return ['ok' => true, 'data' => $list];
     }
+    public function getProfile($username)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $userResult = $this->logindb->query(
+            "SELECT id, username, bio FROM users WHERE username = '$un' LIMIT 1"
+        );
+        if (!$userResult) return ['ok' => false, 'error' => 'DB error'];
+        $user = $userResult->fetch_assoc();
+        if (!$user) return ['ok' => false, 'error' => 'User not found'];
+
+        $userId = (int)$user['id'];
+
+        $reviewResult = $this->logindb->query(
+            "SELECT title, score, review_text, created_at
+             FROM user_reviews
+             WHERE user_id = $userId
+             ORDER BY created_at DESC"
+        );
+        $reviews = [];
+        if ($reviewResult) {
+            while ($row = $reviewResult->fetch_assoc()) $reviews[] = $row;
+        }
+
+        $watchResult = $this->logindb->query(
+            "SELECT title, added_at
+             FROM watch_list
+             WHERE user_id = $userId
+             ORDER BY added_at DESC"
+        );
+        $watchlist = [];
+        if ($watchResult) {
+            while ($row = $watchResult->fetch_assoc()) $watchlist[] = $row;
+        }
+
+        return ['ok' => true, 'user' => $user, 'reviews' => $reviews, 'watchlist' => $watchlist];
+    }
+
+    public function getUserByUsername($username)
+    {
+        $un = $this->logindb->real_escape_string($username);
+        $result = $this->logindb->query("SELECT id, email FROM users WHERE username = '$un' LIMIT 1");
+        if (!$result) return null;
+        return $result->fetch_assoc();
+    }
+
+    public function storeMfaCode($userId, $code)
+    {
+        $userId = (int)$userId;
+        $code   = $this->logindb->real_escape_string($code);
+        $sql = "REPLACE INTO mfa_codes (user_id, code, expires_at, used)
+                VALUES ($userId, '$code', DATE_ADD(NOW(), INTERVAL 10 MINUTE), 0)";
+        return $this->logindb->query($sql);
+    }
+
+    public function verifyMfaCode($userId, $code)
+    {
+        $userId = (int)$userId;
+        $code   = $this->logindb->real_escape_string($code);
+        $result = $this->logindb->query(
+            "SELECT id FROM mfa_codes
+             WHERE user_id = $userId
+               AND code = '$code'
+               AND used = 0
+               AND expires_at > NOW()
+             LIMIT 1"
+        );
+        if (!$result || !$result->fetch_assoc()) {
+            return false;
+        }
+        $this->logindb->query("UPDATE mfa_codes SET used = 1 WHERE user_id = $userId");
+        return true;
+    }
+
     public function getAnimeByGenre($genre, $limit = 12)
     {
         $g = $this->logindb->real_escape_string($genre);

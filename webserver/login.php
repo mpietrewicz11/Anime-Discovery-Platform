@@ -40,13 +40,19 @@ if (is_array($response)) {
     }
 }
 
-if ($success) {
-    $_SESSION['username'] = $username;
+if (is_array($response) && $response['ok'] === true) {
+    if (!empty($response['mfa_required'])) {
+        // credentials valid — hold username and wait for OTP
+        $_SESSION['pending_mfa_user'] = $username;
+        header("Location: verify_otp.html");
+        exit;
+    }
 
+    // no MFA path (fallback, should not normally hit)
+    $_SESSION['username'] = $username;
     if (isset($response['session_id'])) {
         $_SESSION['session_id'] = $response['session_id'];
     }
-
     header("Location: home.php");
     exit;
 }

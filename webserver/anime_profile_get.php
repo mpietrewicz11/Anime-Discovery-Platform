@@ -1,22 +1,30 @@
 <?php
-include 'db.php'
+session_start();
+header("Content-Type: application/json");
 
-$user_id = $_GET['id'] ?? null;
-if (!$user_id) {
-	echo json_encode(["error" => "No user was acknowledged"]);
-	exit;
+if (!isset($_SESSION['username'])) {
+    http_response_code(401);
+    echo json_encode(["ok" => false, "error" => "Not logged in"]);
+    exit;
 }
-// Important info for the user
-$stmt = $pdo->prepare("SELECT id, username, email, bio FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-$stmt2 = $pdo->prepare("SELECT title, score, review_text, created_at FROM user_reviews WHERE user_id = ? ORDER BY created_at DESC");
-$stmt2->execute([$user_id]);
-$reviews = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-$stmt3 = $pdo->prepare("SELECT title, status, added_at FROM watch_list WHERE user_id = ? ORDER BY added_at DESC");
-$stmt3->execute([$user_id]);
-$watchlist = $stmt3-fetchAll(PDO::FETCH_ASSOC);
 
-echo json_encode(["user" => $user, "reviews" => $reviews, "watchlist" => $watchlist]);
-?>
+require_once('path.inc');
+require_once('get_host_info.inc');
+require_once('rabbitMQLib.inc');
 
+$username = isset($_GET['username']) ? trim($_GET['username']) : '';
+
+if (empty($username)) {
+    http_response_code(400);
+    echo json_encode(["ok" => false, "error" => "Missing username"]);
+    exit;
+}
+
+$client   = new rabbitMQClient("testRabbitMQ.ini", "testServer");
+$response = $client->send_request([
+    "type"     => "get_profile",
+    "username" => $username
+]);
+
+echo json_encode($response ?? ["ok" => false, "error" => "No response from backend"]);
+exit;

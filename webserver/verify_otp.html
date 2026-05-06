@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verify Your Identity</title>
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#0f1220;
+      color:#e9ecff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+      padding:20px;
+      box-sizing:border-box;
+    }
+
+    .card{
+      width:100%;
+      max-width:420px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:14px;
+      padding:28px 24px;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:22px;
+    }
+
+    .sub{
+      margin:0 0 22px;
+      color:rgba(233,236,255,0.7);
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    label{
+      display:block;
+      margin:0 0 6px;
+      font-size:13px;
+      color:rgba(233,236,255,0.75);
+    }
+
+    input[type="text"]{
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(0,0,0,0.25);
+      color:#e9ecff;
+      font-size:22px;
+      letter-spacing:8px;
+      text-align:center;
+      outline:none;
+      box-sizing:border-box;
+    }
+
+    input[type="text"]:focus{
+      border-color:rgba(124,92,255,0.7);
+    }
+
+    button{
+      width:100%;
+      margin-top:18px;
+      padding:11px;
+      border-radius:10px;
+      border:none;
+      cursor:pointer;
+      background:#7c5cff;
+      color:white;
+      font-weight:600;
+      font-size:15px;
+    }
+
+    button:hover{ filter:brightness(1.08); }
+    button:disabled{ opacity:0.5; cursor:default; }
+
+    .msg{
+      display:none;
+      margin-top:14px;
+      padding:10px 12px;
+      border-radius:10px;
+      font-size:14px;
+    }
+
+    .msg.error{
+      background:rgba(255,77,109,0.10);
+      border:1px solid rgba(255,77,109,0.35);
+      color:#ffb3c1;
+    }
+
+    .back{
+      display:block;
+      margin-top:16px;
+      text-align:center;
+      font-size:13px;
+      color:rgba(233,236,255,0.6);
+      text-decoration:none;
+    }
+
+    .back:hover{ color:#7c5cff; }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Check your email</h1>
+    <p class="sub">We sent a 6-digit code to your email address. Enter it below to finish logging in. It expires in 10 minutes.</p>
+
+    <div id="msg" class="msg error"></div>
+
+    <form id="otpForm" action="verify_otp.php" method="POST">
+      <label for="code">Verification code</label>
+      <input
+        id="code"
+        type="text"
+        name="code"
+        maxlength="6"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        placeholder="000000"
+        required
+      />
+      <button type="submit" id="submitBtn">Verify</button>
+    </form>
+
+    <a class="back" href="login.html">Back to login</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const msgBox = document.getElementById("msg");
+
+    if (params.get("error") === "invalid_code") {
+      msgBox.textContent = "That code is incorrect or has expired. Try again.";
+      msgBox.style.display = "block";
+    }
+
+    if (params.get("error") === "session_expired") {
+      msgBox.textContent = "Your session expired. Please log in again.";
+      msgBox.style.display = "block";
+    }
+
+    // only allow digits in the code field
+    document.getElementById("code").addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "");
+    });
+
+    document.getElementById("otpForm").addEventListener("submit", () => {
+      document.getElementById("submitBtn").disabled = true;
+      document.getElementById("submitBtn").textContent = "Verifying...";
+    });
+  </script>
+</body>
+</html>

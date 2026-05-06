@@ -4,6 +4,31 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 require_once('login.php.inc');
+require_once __DIR__ . '/vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+
+function smtp_mail($to, $subject, $body) {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com';
+        $mail->Port       = 587;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'it490.adem@gmail.com';
+        $mail->Password   = 'it490anime!@';
+        $mail->setFrom('it490.adem@gmail.com', 'ADEM Project');
+        $mail->addAddress($to);
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+        $mail->AltBody = $body;
+        return $mail->send();
+    } catch (\Throwable $e) {
+        error_log("SMTP error to $to: " . $e->getMessage());
+        return false;
+    }
+}
 
 function logEvent($msg) {
     exec("logger -t it490 " . escapeshellarg($msg));
@@ -20,14 +45,51 @@ function doRegister($username, $password, $email, $emailNotifications)
 function doLogin($username, $password)
 {
     $db = new loginDB();
-    $ok = $db->validateLogin($username, $password);
-    if (!$ok) {
+
+    if (!$db->validateLogin($username, $password)) {
         return ['ok' => false, 'error' => 'Invalid credentials'];
     }
+
+    $user = $db->getUserByUsername($username);
+    if (!$user || empty($user['email'])) {
+        return ['ok' => false, 'error' => 'No email on file for this account'];
+    }
+
+    $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $db->storeMfaCode($user['id'], $code);
+
+    $sent = smtp_mail(
+        $user['email'],
+        'Your ADEM login code',
+        "Hi {$username},\n\nYour verification code is: {$code}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— ADEM Project"
+    );
+
+    if (!$sent) {
+        error_log("MFA email failed for user: $username");
+        return ['ok' => false, 'error' => 'Could not send verification email'];
+    }
+
+    return ['ok' => true, 'mfa_required' => true];
+}
+
+function doVerifyOtp($username, $code)
+{
+    $db = new loginDB();
+
+    $user = $db->getUserByUsername($username);
+    if (!$user) {
+        return ['ok' => false, 'error' => 'User not found'];
+    }
+
+    if (!$db->verifyMfaCode($user['id'], $code)) {
+        return ['ok' => false, 'error' => 'Invalid or expired code'];
+    }
+
     $sessionId = $db->createSession($username);
     if (!$sessionId) {
         return ['ok' => false, 'error' => 'Could not create session'];
     }
+
     return ['ok' => true, 'session_id' => $sessionId];
 }
 
@@ -79,6 +141,12 @@ function doGetTopAnime($limit = 12)
 }
 
 //  this is the new cache additon: fetch a single anime by mal_id from anime_cache
+function doGetProfile($username)
+{
+    $db = new loginDB();
+    return $db->getProfile($username);
+}
+
 function doGetNotifications($username)
 {
     $db = new loginDB();
@@ -148,6 +216,14 @@ function requestProcessor($request)
             logEvent("login attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
             return $result;
 
+        case "verify_otp":
+            if (!isset($request['username']) || !isset($request['code'])) {
+                return ['ok' => false, 'error' => 'Missing username or code'];
+            }
+            $result = doVerifyOtp($request['username'], trim($request['code']));
+            logEvent("verify_otp: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
+            return $result;
+
         case "validate_session":
             if (!isset($request['sessionId'])) {
                 return ['ok' => false, 'error' => 'Missing sessionId'];
@@ -183,6 +259,12 @@ function requestProcessor($request)
         case "get_top_anime":
             $limit = isset($request["limit"]) ? (int)$request["limit"] : 12;
             return doGetTopAnime($limit);
+
+        case "get_profile":
+            if (!isset($request['username'])) {
+                return ['ok' => false, 'error' => 'Missing username'];
+            }
+            return doGetProfile($request['username']);
 
         case "get_notifications":
             if (!isset($request['username'])) {

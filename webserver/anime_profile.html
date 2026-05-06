@@ -49,10 +49,17 @@ body{margin:0;font-family:Arial,sans-serif;background:#0f1220;color:#e9ecff;min-
 </div>
 <script>
 const params = new URLSearchParams(window.location.search);
-const userId = params.get("id");
-fetch(`anime_profile_get.php?id=${userId}`)
+const profileUsername = params.get("username");
+if (!profileUsername) {
+  document.querySelector(".container").innerHTML = '<p style="color:rgba(233,236,255,0.5)">No user specified.</p>';
+}
+fetch(`anime_profile_get.php?username=${encodeURIComponent(profileUsername)}`)
   .then(r => r.json())
   .then(data => {
+    if (!data.ok) {
+      document.querySelector(".container").innerHTML = `<p style="color:rgba(233,236,255,0.5)">${data.error || "Could not load profile."}</p>`;
+      return;
+    }
     const u = data.user;
 // This will take the first 2 characters from their username
     document.getElementById("avatar").textContent = u.username.slice(0,2).toUpperCase();
