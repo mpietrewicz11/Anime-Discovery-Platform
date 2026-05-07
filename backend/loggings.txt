@@ -14,3 +14,11 @@
     "host": "ae396-VirtualBox",
     "user_id": "user_id_any"
 }
+{
+    "time": "2026-05-07T15:37:44+00:00",
+    "lvl": "INFO",
+    "message": "{\"lvl\":\"INFO\",\"message\":\"Able to test log from the anime website\",\"service\":\"ADEMService\",\"user_id\":\"user_123\"}",
+    "service": "ServiceName",
+    "host": "ae396-VirtualBox",
+    "user_id": "user_id_any"
+}
