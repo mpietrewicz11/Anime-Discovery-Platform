@@ -33,6 +33,7 @@ function smtp_mail($to, $subject, $body) {
 }
 
 function logEvent($msg) {
+	echo "logEvent called: $msg\n";
     try {
         $conn = new AMQPConnection(['host'=>'100.64.95.105','port'=>5672,'login'=>'deploy','password'=>'123','vhost'=>'deploy']);
         $conn->connect();
