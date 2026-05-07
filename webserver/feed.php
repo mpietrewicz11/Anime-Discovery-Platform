@@ -122,6 +122,8 @@ $username = htmlspecialchars($_SESSION['username']);
 
     .post-meta{ flex:1;min-width:0; }
     .post-author{ font-weight:700;font-size:14px; }
+    .user-link{ color:inherit;text-decoration:none;font-weight:700; }
+    .user-link:hover{ color:var(--accent);text-decoration:underline; }
     .post-time{ font-size:12px;color:var(--muted); }
 
     .repost-label{
@@ -295,7 +297,7 @@ $username = htmlspecialchars($_SESSION['username']);
     const isRepost = p.repost_of !== null;
 
     const repostLabel = isRepost
-      ? `<div class="repost-label">&#8617; reposted by <b>${esc(p.author)}</b></div>`
+      ? `<div class="repost-label">&#8617; reposted by <a class="user-link" href="anime_profile.html?username=${encodeURIComponent(p.author)}">${esc(p.author)}</a></div>`
       : "";
 
     const bodyHtml = isRepost
@@ -304,7 +306,7 @@ $username = htmlspecialchars($_SESSION['username']);
 
     const originalHtml = isRepost && p.original_body
       ? `<div class="original-post">
-           <div class="orig-author">@${esc(p.original_author)}</div>
+           <div class="orig-author"><a class="user-link" href="anime_profile.html?username=${encodeURIComponent(p.original_author)}">@${esc(p.original_author)}</a></div>
            <div class="orig-body">${esc(p.original_body)}</div>
          </div>`
       : "";
@@ -320,7 +322,7 @@ $username = htmlspecialchars($_SESSION['username']);
         <div class="post-header">
           <div class="avatar">${initials}</div>
           <div class="post-meta">
-            <div class="post-author">@${isRepost ? esc(p.original_author ?? p.author) : esc(p.author)}</div>
+            <div class="post-author"><a class="user-link" href="anime_profile.html?username=${encodeURIComponent(isRepost ? (p.original_author ?? p.author) : p.author)}">@${isRepost ? esc(p.original_author ?? p.author) : esc(p.author)}</a></div>
             <div class="post-time">${timeAgo(p.created_at)}</div>
           </div>
         </div>
