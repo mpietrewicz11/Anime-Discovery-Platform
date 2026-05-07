@@ -39,7 +39,8 @@ $queue->consume(function($msg) {
 		file_put_contents("/var/log/it490.log", $logEntry, FILE_APPEND);
 	} catch (Exception $e) {
 		echo "Error of writing to a logging file: " . $e->getMessage() . "\n";
-	} 
+	}
+	$msg->ack(); 
 	
 });
 } catch (Exception $e) {
