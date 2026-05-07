@@ -9,7 +9,8 @@ if (!isset($_SESSION['username'])) {
 }
 
 $body = trim($_POST['body'] ?? '');
-if ($body === '') {
+$isRepost = isset($_POST['repost_of']) && ctype_digit((string)$_POST['repost_of']);
+if ($body === '' && !$isRepost) {
     echo json_encode(['ok' => false, 'error' => 'Post cannot be empty']);
     exit;
 }
