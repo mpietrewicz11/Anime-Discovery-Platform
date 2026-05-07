@@ -55,6 +55,7 @@ function doLogin($username, $password)
     $db = new loginDB();
 
     if (!$db->validateLogin($username, $password)) {
+        logEvent("login failed - invalid credentials: $username");
         return ['ok' => false, 'error' => 'Invalid credentials'];
     }
 
@@ -78,8 +79,8 @@ function doLogin($username, $password)
             "Hi {$username},\n\nYour verification code is: {$code}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— ADEM Project"
         );
 
-        if (!$sent) {
-            error_log("MFA email failed for user: $username");
+         if (!$sent) {
+            logEvent("mfa email failed: $username");
             return ['ok' => false, 'error' => 'mfa_email_failed'];
         }
 
@@ -273,6 +274,7 @@ function requestProcessor($request)
                 !isset($request['password']) ||
                 !isset($request['email'])
             ) {
+                logEvent("register failed - missing fields");
                 return ['ok' => false, 'error' => 'Missing registration fields'];
             }
             $emailNotifications = isset($request['email_notifications'])
@@ -287,8 +289,9 @@ function requestProcessor($request)
             logEvent("register attempt: " . $request['username'] . " result: " . ($result['ok'] ? 'success' : 'failed'));
             return $result;
 
-        case "login":
+          case "login":
             if (!isset($request['username']) || !isset($request['password'])) {
+                logEvent("login failed - missing fields");
                 return ['ok' => false, 'error' => 'Missing login fields'];
             }
             $result = doLogin($request['username'], $request['password']);
