@@ -34,7 +34,7 @@ function smtp_mail($to, $subject, $body) {
 
 function logEvent($msg) {
     try {
-        $conn = new AMQPConnection(['host'=>'100.67.69.11','port'=>5672,'login'=>'it490app','password'=>'123456','vhost'=>'/it490']);
+        $conn = new AMQPConnection(['host'=>'100.64.95.105','port'=>5672,'login'=>'deploy','password'=>'123','vhost'=>'deploy']);
         $conn->connect();
         $ex = new AMQPExchange(new AMQPChannel($conn));
         $ex->setName("logs.exchange");
