@@ -8,7 +8,7 @@ require_once('login.php.inc');
 function doRegister($username, $password)
 {
     $db = new loginDB();
-    return $db->registerUser($username, $password); // you must implement this
+    return $db->registerUser($username, $password); // implementing this is important of course
 }
 
 function doLogin($username, $password)
@@ -20,7 +20,7 @@ function doLogin($username, $password)
         return ['ok' => false, 'error' => 'Invalid credentials'];
     }
 
-    $sessionId = $db->createSession($username); // you must implement this
+    $sessionId = $db->createSession($username); // Also important too
     if (!$sessionId) {
         return ['ok' => false, 'error' => 'Could not create session'];
     }
@@ -31,7 +31,7 @@ function doLogin($username, $password)
  function doValidate($sessionId)
 {
     $db = new loginDB();
-    $ok = $db->validateSession($sessionId); // optional, implement if needed
+    $ok = $db->validateSession($sessionId); // We need this for validation just an extra cushion
     return ['ok' => (bool)$ok];
 }
 
