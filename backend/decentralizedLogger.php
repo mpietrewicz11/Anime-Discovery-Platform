@@ -13,6 +13,7 @@ $channel = new AMQPChannel($conn);
 $exchange = new AMQPExchange($channel);
 $exchange->setName("logs.exchange");
 $exchange->setType("fanout");
+$exchange->setFlags(AMQP_DURABLE);
 $exchange->declareExchange();
 
 $queue = new AMQPQueue($channel);
