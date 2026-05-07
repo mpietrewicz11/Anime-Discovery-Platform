@@ -26,5 +26,9 @@ $response = $client->send_request([
     "username" => $username
 ]);
 
+if (is_array($response) && !empty($response['ok'])) {
+    $response['viewer'] = $_SESSION['username'];
+}
+
 echo json_encode($response ?? ["ok" => false, "error" => "No response from backend"]);
 exit;

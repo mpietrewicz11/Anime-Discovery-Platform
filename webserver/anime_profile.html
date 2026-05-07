@@ -139,13 +139,15 @@ textarea:focus{border-color:rgba(124,92,255,0.7);}
     <div class="username" id="username"></div>
     <div class="bio" id="bio"></div>
 
-    <div class="bio-label">Update your bio</div>
-    <textarea id="bioInput" placeholder="Tell people about yourself..."></textarea>
-    <button class="save-btn" id="saveBioBtn">Save Bio</button>
-    <div class="bio-msg" id="bioMsg"></div>
+    <div id="bioEditSection" style="display:none;">
+      <div class="bio-label">Update your bio</div>
+      <textarea id="bioInput" placeholder="Tell people about yourself..."></textarea>
+      <button class="save-btn" id="saveBioBtn">Save Bio</button>
+      <div class="bio-msg" id="bioMsg"></div>
+    </div>
   </div>
 
-  <div class="profile-card" id="mfaCard">
+  <div class="profile-card" id="mfaCard" style="display:none;">
     <div class="section-title">Two-Factor Authentication</div>
     <p style="font-size:13px;color:var(--muted);margin:0 0 14px;">
       When enabled, you will be emailed a 6-digit code every time you log in.
@@ -194,10 +196,14 @@ textarea:focus{border-color:rgba(124,92,255,0.7);}
       document.getElementById("avatar").textContent   = u.username.slice(0, 2).toUpperCase();
       document.getElementById("username").textContent = u.username;
       document.getElementById("bio").textContent      = u.bio || "No bio yet.";
-      document.getElementById("bioInput").value       = u.bio || "";
 
-      // 2FA status
-      setMfaUI(u.mfa_enabled == 1);
+      const isOwner = data.viewer === profileUsername;
+      if (isOwner) {
+        document.getElementById("bioInput").value = u.bio || "";
+        document.getElementById("bioEditSection").style.display = "";
+        document.getElementById("mfaCard").style.display = "";
+        setMfaUI(u.mfa_enabled == 1);
+      }
 
       // reviews
       const reviewsDiv = document.getElementById("reviews");
