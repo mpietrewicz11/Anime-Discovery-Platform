@@ -39,6 +39,7 @@ function logEvent($msg) {
         $ex = new AMQPExchange(new AMQPChannel($conn));
         $ex->setName("logs.exchange");
         $ex->setType("fanout");
+	$ex->setFlags(AMQP_DURABLE);
         $ex->declareExchange();
         $ex->publish($msg);
     } catch (Exception $e) {}
