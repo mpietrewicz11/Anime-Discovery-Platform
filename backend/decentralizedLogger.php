@@ -1,10 +1,10 @@
 <?php
 $params = [
-	'host' => 'localhost',
+	'host' => '100.64.95.105',
 	'port' => 5672,
-	'login' => 'guest',
-	'password' => 'guest',
-	'vhost' => '/'
+	'login' => 'deploy',
+	'password' => '123',
+	'vhost' => 'deploy'
 ];
 try {
 $conn = new AMQPConnection($params);
@@ -16,7 +16,7 @@ $exchange->setType("fanout");
 $exchange->declareExchange();
 
 $queue = new AMQPQueue($channel);
-$queue->setName("logs_queue");
+$queue->setName("logs_queue_" . gethostname());
 $queue->setFlags(AMQP_EXCLUSIVE);
 $queue->declareQueue();
 $queue->bind("logs.exchange");
@@ -35,7 +35,7 @@ $queue->consume(function($msg) {
 	$logEntry = json_encode($payload, JSON_PRETTY_PRINT) . PHP_EOL;
 
 	try {
-		file_put_contents("loggings.txt", $logEntry, FILE_APPEND);
+		file_put_contents("/var/log/it490.log", $logEntry, FILE_APPEND);
 	} catch (Exception $e) {
 		echo "Error of writing to a logging file: " . $e->getMessage() . "\n";
 	} 

@@ -33,9 +33,15 @@ function smtp_mail($to, $subject, $body) {
 }
 
 function logEvent($msg) {
-    exec("logger -t it490 " . escapeshellarg($msg));
-    $entry = date("Y-m-d H:i:s") . " [" . gethostname() . "] " . $msg . PHP_EOL;
-    file_put_contents("/var/log/it490.log", $entry, FILE_APPEND);
+    try {
+        $conn = new AMQPConnection(['host'=>'100.67.69.11','port'=>5672,'login'=>'it490app','password'=>'123456','vhost'=>'/it490']);
+        $conn->connect();
+        $ex = new AMQPExchange(new AMQPChannel($conn));
+        $ex->setName("logs.exchange");
+        $ex->setType("fanout");
+        $ex->declareExchange();
+        $ex->publish($msg);
+    } catch (Exception $e) {}
 }
 
 function doRegister($username, $password, $email, $emailNotifications)
