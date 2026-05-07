@@ -460,6 +460,93 @@ class loginDB
         return ['ok' => true, 'data' => $rows];
     }
 
+    public function createPost($userId, $body, $repostOf = null)
+    {
+        $userId = (int)$userId;
+        $body   = $this->logindb->real_escape_string($body);
+
+        if ($repostOf !== null) {
+            $repostOf = (int)$repostOf;
+            $check = $this->logindb->query("SELECT id FROM posts WHERE id = $repostOf LIMIT 1");
+            if (!$check || !$check->fetch_assoc()) {
+                return ['ok' => false, 'error' => 'Original post not found'];
+            }
+            $sql = "INSERT INTO posts (user_id, body, repost_of, created_at)
+                    VALUES ($userId, '$body', $repostOf, NOW())";
+        } else {
+            $sql = "INSERT INTO posts (user_id, body, created_at)
+                    VALUES ($userId, '$body', NOW())";
+        }
+
+        $ok = $this->logindb->query($sql);
+        return $ok ? ['ok' => true] : ['ok' => false, 'error' => 'DB error'];
+    }
+
+    public function getFeed($currentUserId, $limit = 30)
+    {
+        $currentUserId = (int)$currentUserId;
+        $limit = min((int)$limit, 50);
+
+        $sql = "
+            SELECT
+                p.id,
+                p.body,
+                p.created_at,
+                p.repost_of,
+                u.username       AS author,
+                (SELECT COUNT(*) FROM post_likes pl  WHERE pl.post_id  = p.id)                              AS like_count,
+                (SELECT COUNT(*) FROM post_likes pl2 WHERE pl2.post_id = p.id AND pl2.user_id = $currentUserId) AS user_liked,
+                op.body          AS original_body,
+                ou.username      AS original_author
+            FROM posts p
+            JOIN users u  ON p.user_id   = u.id
+            LEFT JOIN posts op ON p.repost_of = op.id
+            LEFT JOIN users ou ON op.user_id  = ou.id
+            ORDER BY p.created_at DESC
+            LIMIT $limit
+        ";
+
+        $result = $this->logindb->query($sql);
+        if (!$result) {
+            return ['ok' => false, 'error' => 'DB error: ' . $this->logindb->error];
+        }
+
+        $posts = [];
+        while ($row = $result->fetch_assoc()) {
+            $posts[] = [
+                'id'              => (int)$row['id'],
+                'body'            => $row['body'],
+                'created_at'      => $row['created_at'],
+                'repost_of'       => $row['repost_of'] !== null ? (int)$row['repost_of'] : null,
+                'author'          => $row['author'],
+                'like_count'      => (int)$row['like_count'],
+                'user_liked'      => (bool)(int)$row['user_liked'],
+                'original_body'   => $row['original_body'],
+                'original_author' => $row['original_author'],
+            ];
+        }
+
+        return ['ok' => true, 'posts' => $posts];
+    }
+
+    public function likePost($userId, $postId)
+    {
+        $userId = (int)$userId;
+        $postId = (int)$postId;
+
+        $check = $this->logindb->query(
+            "SELECT user_id FROM post_likes WHERE user_id = $userId AND post_id = $postId LIMIT 1"
+        );
+
+        if ($check && $check->fetch_assoc()) {
+            $this->logindb->query("DELETE FROM post_likes WHERE user_id = $userId AND post_id = $postId");
+            return ['ok' => true, 'liked' => false];
+        }
+
+        $this->logindb->query("INSERT INTO post_likes (user_id, post_id) VALUES ($userId, $postId)");
+        return ['ok' => true, 'liked' => true];
+    }
+
     public function getAnimeDetail($animeId)
     {
         $aid = (int)$animeId;

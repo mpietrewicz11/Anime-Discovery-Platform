@@ -317,6 +317,7 @@ $username = htmlspecialchars($_SESSION['username']);
     <div class="nav-links">
       <a href="home.php">Home</a>
       <a href="watchlists.php">Watchlists</a>
+      <a href="feed.php">Feed</a>
       <a href="my_profile.php">Profile</a>
       <a href="logout.php">Logout</a>
     </div>

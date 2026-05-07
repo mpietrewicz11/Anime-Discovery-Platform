@@ -220,6 +220,30 @@ function doGetAnimeByGenre($genre, $limit = 12)
     return $db->getAnimeByGenre($genre, $limit);
 }
 
+function doCreatePost($username, $body, $repostOf = null)
+{
+    $db   = new loginDB();
+    $user = $db->getUserByUsername($username);
+    if (!$user) return ['ok' => false, 'error' => 'User not found'];
+    return $db->createPost((int)$user['id'], $body, $repostOf);
+}
+
+function doGetFeed($username)
+{
+    $db   = new loginDB();
+    $user = $db->getUserByUsername($username);
+    $uid  = $user ? (int)$user['id'] : 0;
+    return $db->getFeed($uid);
+}
+
+function doLikePost($username, $postId)
+{
+    $db   = new loginDB();
+    $user = $db->getUserByUsername($username);
+    if (!$user) return ['ok' => false, 'error' => 'User not found'];
+    return $db->likePost((int)$user['id'], $postId);
+}
+
 function doGetAnimeDetail($animeId)
 {
     $db = new loginDB();
@@ -358,6 +382,25 @@ function requestProcessor($request)
                 return ['ok' => false, 'error' => 'Missing anime_id'];
             }
             return doGetAnimeDetail((int)$request['anime_id']);
+
+        case "create_post":
+            if (!isset($request['username']) || !isset($request['body'])) {
+                return ['ok' => false, 'error' => 'Missing fields'];
+            }
+            $repostOf = isset($request['repost_of']) ? (int)$request['repost_of'] : null;
+            return doCreatePost($request['username'], $request['body'], $repostOf);
+
+        case "get_feed":
+            if (!isset($request['username'])) {
+                return ['ok' => false, 'error' => 'Missing username'];
+            }
+            return doGetFeed($request['username']);
+
+        case "like_post":
+            if (!isset($request['username']) || !isset($request['post_id'])) {
+                return ['ok' => false, 'error' => 'Missing fields'];
+            }
+            return doLikePost($request['username'], (int)$request['post_id']);
     }
 
     return ['ok' => false, 'error' => 'Unsupported type'];
