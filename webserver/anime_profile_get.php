@@ -13,7 +13,7 @@ require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 
 $username = isset($_GET['username']) ? trim($_GET['username']) : '';
-
+//in case the user forgets to add username
 if (empty($username)) {
     http_response_code(400);
     echo json_encode(["ok" => false, "error" => "Missing username"]);
