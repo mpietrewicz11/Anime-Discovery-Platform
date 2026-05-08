@@ -17,6 +17,6 @@ $response = $client->send_request([
     'type'     => 'get_feed',
     'username' => $_SESSION['username']
 ]);
-
+//added a debugger
 echo json_encode($response ?? ['ok' => false, 'error' => 'No response from backend']);
 exit;

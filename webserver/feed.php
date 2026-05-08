@@ -4,6 +4,7 @@ if (!isset($_SESSION['username'])) {
     header("Location: login.html");
     exit;
 }
+//this is the feed page 
 $username = htmlspecialchars($_SESSION['username']);
 ?>
 <!DOCTYPE html>
@@ -241,7 +242,7 @@ $username = htmlspecialchars($_SESSION['username']);
 <div class="container">
 
   <div class="compose">
-    <textarea id="composeBox" placeholder="What's on your mind?"></textarea>
+    <textarea id="composeBox" placeholder="What's up tell us something?"></textarea>
     <div class="compose-footer">
       <button class="btn-post" id="postBtn">Post</button>
     </div>
@@ -312,7 +313,7 @@ $username = htmlspecialchars($_SESSION['username']);
       : "";
 
     const headerAuthor = isRepost ? esc(p.author) : esc(p.author);
-
+    //likes icons 
     const likedClass = p.user_liked ? " liked" : "";
     const likedIcon  = p.user_liked ? "♥" : "♡";
 
@@ -348,7 +349,7 @@ $username = htmlspecialchars($_SESSION['username']);
       const data = await res.json();
 
       if (!data.ok || !Array.isArray(data.posts) || data.posts.length === 0) {
-        feedEl.innerHTML = '<div class="empty">No posts yet. Be the first to post!</div>';
+        feedEl.innerHTML = '<div class="empty">Post something here!</div>';
         return;
       }
 

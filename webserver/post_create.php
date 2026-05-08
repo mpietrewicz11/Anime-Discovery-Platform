@@ -1,7 +1,7 @@
 <?php
 session_start();
 header("Content-Type: application/json");
-
+//endpoint for posts in the feed 
 if (!isset($_SESSION['username'])) {
     http_response_code(401);
     echo json_encode(['ok' => false, 'error' => 'Not logged in']);

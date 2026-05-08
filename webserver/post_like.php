@@ -24,6 +24,6 @@ $response = $client->send_request([
     'username' => $_SESSION['username'],
     'post_id'  => $postId
 ]);
-
+//added debugger here 
 echo json_encode($response ?? ['ok' => false, 'error' => 'No response from backend']);
 exit;

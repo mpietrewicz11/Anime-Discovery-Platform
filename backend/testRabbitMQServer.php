@@ -200,11 +200,11 @@ function doTestNotification($username, $animeTitle)
     if (!$user || empty($user['email'])) {
         return ['ok' => false, 'error' => 'No email on file for this account'];
     }
-
+   // this sends the test email notification
     $sent = smtp_mail(
         $user['email'],
         "You're subscribed to {$animeTitle}!",
-        "Hi {$username},\n\nThanks for subscribing to {$animeTitle} on ADEM Project!\n\nYou'll receive an email alert whenever a new episode drops.\n\n— ADEM Project"
+        "Hi {$username},\n\nThanks for testing lol {$animeTitle} on ADEM Project!\n\nYou'll receive an email alert whenever a new episode drops.\n\n— ADEM Project"
     );
 
     return $sent
