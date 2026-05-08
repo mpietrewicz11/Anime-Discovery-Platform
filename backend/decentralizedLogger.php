@@ -34,7 +34,7 @@ $queue->consume(function($msg) {
 		"user_id" => "user_id_any"
 	];
 	$logEntry = json_encode($payload, JSON_PRETTY_PRINT) . PHP_EOL;
-
+	//to catch errors to see if it'll succeed or write a reason it failed for file
 	try {
 		file_put_contents("/var/log/it490.log", $logEntry, FILE_APPEND);
 	} catch (Exception $e) {
