@@ -4,13 +4,13 @@ require_once('path.inc');
 require_once('get_host_info.inc');
 require_once('rabbitMQLib.inc');
 require_once('login.php.inc');
-
+//takes all the important stuff for registration such as username, password, email and email notifications, throws it to the database and creates account
 function doRegister($username, $password, $email, $emailNotifications)
 {
     $db = new loginDB();
     return $db->registerUser($username, $password, $email, $emailNotifications);
 }
-
+//sees everything like username and password for the specific user and the credentials into creating a session
 function doLogin($username, $password)
 {
     $db = new loginDB();
