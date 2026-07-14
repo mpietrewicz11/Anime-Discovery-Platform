@@ -1,6 +1,6 @@
 # ADEM — Anime Discovery & Engagement Manager
 
-A distributed web application built across 8 Linux virtual machines spanning production, QA, and development environments. Built for IT-490 (Distributed Systems) at NJIT.
+A distributed web application built across 8 Linux virtual machines spanning production, QA, and development environments. Built for IT-490 (Systems Integration) at NJIT.
 
 ## Architecture
 
