@@ -63,17 +63,6 @@ Log events are published to a RabbitMQ fanout exchange (`logs.exchange`) and bro
 - **Infrastructure:** Linux (Ubuntu 22.04/24.04), systemd, Tailscale, Bash
 - **Deployment:** Custom shell/PHP pipeline, rsync, SSH
 
-## My Contributions
-
-- Designed and built the entire backend infrastructure (RabbitMQ, MySQL, PHP backend services)
-- Built the deployment pipeline end to end (builder.sh, deployClient.php, deployServer.php)
-- Configured all three backend environments (Prod, QA, Dev)
-- Implemented decentralized logging across all VMs
-- Set up systemd services for automatic process management
-- Implemented bcrypt password hashing and MFA
-- Configured MySQL, RabbitMQ vhosts, exchanges, and queues
-- Set up Tailscale VPN networking across all 8 VMs
-- Built the discussion/feed feature and public profile system
 
 ## Branch
 
